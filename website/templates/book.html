@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+{% block content %}
+    <h1>Availvable Books</h1>
+<ul>
+{% for i in list %}
+    <li>BOOK NAME: {{ i.name }} => ISSUED: {{ i.issue }}</li>
+{% endfor %}
+</ul>
+{% endblock %}
