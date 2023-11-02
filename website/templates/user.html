@@ -3,6 +3,13 @@
 
 <p>USN: {{ usn }}</p>
 <p>EMAIL: {{ email }}</p>
-    <p>ISSUED: {{ issued }}</p>
-    <p>FINE: {{ fine }}</p>
+    {% if issued is not NoneType%}
+    <p>Issued Book: {{ issued.name }}</p>
+        <p>ISBN: {{ issued.isbn }}</p>
+        <p>Issue date: {{ issued.issue_date }}</p>
+        <p>Return date: {{ issued.ret_date }}</p>
+    {% else %}
+    <p>Issued Book: -----</p>
+    {% endif %}
+    <p>Due Amount: {{ fine }}</p>
 {% endblock %}

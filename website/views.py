@@ -4,8 +4,9 @@ from django.contrib.auth import login, logout, authenticate
 from django.contrib import messages
 from .models import Book, Student
 from django.http import HttpResponse
-from .forms import Login
+# from .forms import Login
 from .forms import CreateUser
+from datetime import date
 
 """
 def login_user(request):
@@ -33,12 +34,23 @@ def login_user(request):
     return render(request, 'login.html', {})
 """
 
+
 def login_user(request):
     if request.method == 'POST':
         usn = request.POST['usn']
         password = request.POST['password']
         try:
             u = get_object_or_404(Student, usn=usn, password=password)
+            fine = 0
+            if u.issued:
+                if u.issued.issue:
+                    days = (date.today() - u.issued.issue_date)
+                    print(date.today())
+                    d = days.days
+                    if d > 15:
+                        day = d - 15
+                        fine = day * 10
+                        u.fine = fine
             context = {
                 'usn': u.usn,
                 'email': u.email,
@@ -55,7 +67,7 @@ def login_user(request):
 
 @login_required()
 def data(request, usn_id):
-    u = get_object_or_404(pk=usn_id)
+    u = get_object_or_404(Student, usn=usn_id)
     context = {
         'usn': u.usn,
         'email': u.email,
