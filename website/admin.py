@@ -11,6 +11,7 @@ class StudAdmin(admin.ModelAdmin):
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == 'issued':
             kwargs['queryset'] = Book.objects.filter(issue=False)
+            # kwargs['to_field_name'] = 'isbn'
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
@@ -19,6 +20,7 @@ class BookAdmin(admin.ModelAdmin):
     search_fields = ('name', 'isbn',)
     list_display = ('name',
                     'isbn',
+                    'author',
                     'issue',
                     # 'issue_to',
                     'issue_date',

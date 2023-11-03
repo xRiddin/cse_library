@@ -57,6 +57,7 @@ def login_user(request):
                 'fine': u.fine,
                 'issued': u.issued,
             }
+            messages.success(request, 'you have logged in...')
             return render(request, 'user.html', context)
         except Exception as e:
             print(e)
