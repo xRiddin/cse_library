@@ -39,14 +39,4 @@ class Student(models.Model):
     def __str__(self):
         return f"Name: {self.name} ; USN: {self.usn} ; User mail: {self.email} ;  fine: {self.fine} ; Book in Issue: {self.issued} ;"
 
-    def save(self, *args, **kwargs):
-        if self.issued:
-            Book.objects.filter(usn=self.usn).update(issue=False)
-            Book.objects.filter(usn=self.usn).update(usn=0)
-            self.issued.issue = True
-            self.issued.usn = self.usn
-            self.issued.save()
-        else:
-            Book.objects.filter(usn=self.usn).update(issue=False)
-            Book.objects.filter(usn=self.usn).update(usn=0)
-        super().save(*args, **kwargs)
+
