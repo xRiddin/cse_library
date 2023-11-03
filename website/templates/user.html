@@ -1,6 +1,14 @@
 {% extends 'base.html' %}
 {% block content %}
 
+    {% for message in messages %}
+
+    <div class="alert alert-success">
+        <a class="close" href="#" data-dismiss="alert">×</a>
+           {{ message }}
+    </div>
+
+{% endfor %}
 <p>USN: {{ usn }}</p>
 <p>EMAIL: {{ email }}</p>
     {% if issued is not NoneType%}

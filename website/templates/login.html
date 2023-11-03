@@ -1,5 +1,13 @@
 {% extends 'base.html' %}
 {% block content %}
+    {% for message in messages %}
+
+    <div class="alert alert-success">
+        <a class="close" href="#" data-dismiss="alert">×</a>
+           {{ message }}
+    </div>
+
+{% endfor %}
 <form method="post" action="{% url 'login_user' %}">
 {% csrf_token %}
   <div class="mb-3">
