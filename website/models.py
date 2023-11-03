@@ -18,7 +18,6 @@ class Book(models.Model):
     ret_date = models.DateField(default=get_expiry)
     usn = models.CharField(max_length=20, default=0)
 
-
     def __str__(self):
         return f"Book: {self.name} ; ISBN: {self.isbn} ; Author: {self.author} ; Issued: {self.issue}; From: {self.issue_date}; Till: {self.ret_date})"
 

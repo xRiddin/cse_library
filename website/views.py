@@ -8,32 +8,6 @@ from django.http import HttpResponse
 from .forms import CreateUser
 from datetime import date
 
-"""
-def login_user(request):
-    if request.method == 'POST':
-        usn = request.POST['usn']
-        password = request.POST['password']
-        user = authenticate(request, username=usn, password=password)
-        if user is not None:
-            print("success")
-            login(request, user)
-            u = get_object_or_404(Student, pk=usn)
-            context = {
-                'usn': u.usn,
-                'email': u.email,
-                'fine': u.fine,
-                'issued': u.issued,
-            }
-            return render(request, 'user.html', context)
-        else:
-            print("fail")
-            messages.error(request, 'Invalid email or password')
-    else:
-        form = Login()
-
-    return render(request, 'login.html', {})
-"""
-
 
 def login_user(request):
     if request.method == 'POST':
@@ -110,14 +84,3 @@ def createuser(request):
 
     }
     return render(request, 'createuser.html', context)
-
-
-def index(request, id):
-    return HttpResponse("<h1>%s</h1>" % id)
-
-
-"""em = Book(name='Book Name', isbn=123456, issue=True)
-            em.save()
-            new_user = Stu(email=email, password=password, fine=1, issued=em)
-            new_user.save()
-            return redirect('data')"""
