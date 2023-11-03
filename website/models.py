@@ -15,6 +15,7 @@ class Book(models.Model):
     issue = models.BooleanField(default=False)
     issue_date = models.DateField(default=timezone.now)
     ret_date = models.DateField(default=get_expiry)
+    usn = models.CharField(max_length=20)
 
     def __str__(self):
         return f"Book: {self.name} ; ISBN: {self.isbn} ; Issued: {self.issue}; From: {self.issue_date}; Till: {self.ret_date})"
@@ -22,7 +23,7 @@ class Book(models.Model):
 
 class Student(models.Model):
     name = models.CharField(max_length=20, default='NAME')
-    usn = models.IntegerField()
+    usn = models.CharField(max_length=20)
     email = models.CharField(max_length=50)
     password = models.CharField(max_length=20)
     fine = models.IntegerField(default=0)
@@ -34,15 +35,12 @@ class Student(models.Model):
 
     def save(self, *args, **kwargs):
         if self.issued:
+            Book.objects.filter(usn=self.usn).update(issue=False)
+            Book.objects.filter(usn=self.usn).update(usn=0)
             self.issued.issue = True
+            self.issued.usn = self.usn
             self.issued.save()
         else:
-            if self.issued_id:
-                previous_book = Book.objects.get(id=self.issued_id)
-                if previous_book.issue:
-                    previous_book.issue = False
-                    previous_book.save()
+            Book.objects.filter(usn=self.usn).update(issue=False)
+            Book.objects.filter(usn=self.usn).update(usn=0)
         super().save(*args, **kwargs)
-
-        if not self.issued:
-            Book.objects.filter(issue=True).update(issue=False)
