@@ -28,7 +28,7 @@ class Student(models.Model):
     password = models.CharField(max_length=20)
     fine = models.IntegerField(default=0)
     issue = models.BooleanField(default=False)
-    issued = models.One (Book, on_delete=models.CASCADE, null=True, blank=True)
+    issued = models.OneToOneField(Book, on_delete=models.CASCADE, null=True, blank=True)
 
     def __str__(self):
         return f"Name: {self.name} ; USN: {self.usn} ; User mail: {self.email} ;  fine: {self.fine} ; Book in Issue: {self.issued} ;"
