@@ -30,3 +30,7 @@ Contributions are very much appreciated 🙌.
 => Add .html files in the /templates folder.
 
 => css/js files in the STATIC folder.
+
+=> ```
+   python manage.py collectstatic
+   ```
