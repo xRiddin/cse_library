@@ -14,18 +14,21 @@ class Book(models.Model):
     isbn = models.IntegerField(default=0)
     author = models.CharField(max_length=200, default='EWIT')
     issue = models.BooleanField(default=False)
-    issue_date = models.DateField(default=timezone.now)
+    issue_date = models.DateField(default=datetime.today)
     ret_date = models.DateField(default=get_expiry)
     usn = models.CharField(max_length=20, default=0)
 
     def __str__(self):
-        return f"Book: {self.name} ; ISBN: {self.isbn} ; Author: {self.author} ; Issued: {self.issue}; From: {self.issue_date}; Till: {self.ret_date})"
+        return f"Book: {self.name} ; ISBN: {self.isbn} ; Author: {self.author} ; Issued: {self.issue}; USN: {self.usn} ; From: {self.issue_date}; Till: {self.ret_date})"
 
+    def save(self, *args, **kwargs):
+        self.issue_date = datetime.today()
+        self.ret_date = get_expiry()
+        super().save(*args, **kwargs)
 
 class Student(models.Model):
     name = models.CharField(max_length=20, default='NAME')
     usn = models.CharField(max_length=7)
-
     email = models.CharField(max_length=50)
     password = models.CharField(max_length=20)
     fine = models.IntegerField(default=0)
@@ -39,7 +42,6 @@ class Student(models.Model):
     """
     def __str__(self):
         return f"Name: {self.name} ; USN: {self.usn} ; User mail: {self.email} ;  fine: {self.fine} ; Book in Issue: {self.issued} ;"
-
 
     def save(self, *args, **kwargs):
         if self.issued:

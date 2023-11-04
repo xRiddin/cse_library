@@ -3,21 +3,48 @@
 
     {% for message in messages %}
 
-    <div class="alert alert-success">
-        <a class="close" href="#" data-dismiss="alert">×</a>
+    <div class="alert">
+        <a class="close" href="#" data-dismiss="alert">X</a>
            {{ message }}
     </div>
 
 {% endfor %}
-<p>USN: {{ usn }}</p>
-<p>EMAIL: {{ email }}</p>
-    {% if issued is not NoneType%}
-    <p>Issued Book: {{ issued.name }}</p>
-        <p>ISBN: {{ issued.isbn }}</p>
-        <p>Issue date: {{ issued.issue_date }}</p>
-        <p>Return date: {{ issued.ret_date }}</p>
+    <h2 style="font-size: 50px; text-align: center; color: #d24726"> Student Details</h2>
+     <h2 style="font-size: 35px; color: coral; text-align: center">Welcome Back, {{ name }}</h2>
+    <p align="right"><a href="{% url 'search' %}">Search</a></p>
+    <hr><hr>
+    <marquee style="font-size: 35px; color: #8e1519; text-align: center">Announcement, {{ name }} Your fine: {{ fine }}</marquee>
+    <hr>
+    <table style="font-size: 30px" class="blue" border="1px" align="center">
+    <tr>
+    <th bgcolor="#ff7f50" colspan="2"> Student Info</th>
+    </tr>
+    <thread>
+    <tr>
+        <td>   NAME: </td> <td>{{ name }}</td>
+        </tr>
+        <hr>
+    </thread>
+    <thread>
+        <tr><td>USN:</td> <td> {{ usn }}</td></tr>
+    </thread>
+    <thread>
+        <tr><td>EMAIL:</td> <td> {{ email }}</td></tr>
+    </thread>
+        {% if issued is not NoneType %}
+            <div class="issued-book">
+        <tr><td>Issued Book:</td><td>{{ issued.name }}</td></tr>
+                <tr><td>ISBN: </td><td>{{ issued.isbn }}</td></tr>
+                <tr><td>Issue date: </td><td>{{ issued.issue_date }}</td></tr>
+                <tr><td>Return date: </td><td>{{ issued.ret_date }}</td></tr>
+            </div>
     {% else %}
-    <p>Issued Book: -----</p>
+            <tr><td>Issued Book: </td><td>------</td></tr>
     {% endif %}
-    <p>Due Amount: {{ fine }}</p>
+        <div class="due-amount"><tr><td>Due Amount: </td><td>{{ fine }}</td></tr>
+        </div>
+    </table>
+    {% include 'footer.html' %}
 {% endblock %}
+
+

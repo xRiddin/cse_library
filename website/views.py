@@ -5,7 +5,7 @@ from django.contrib import messages
 from .models import Book, Student
 from django.http import HttpResponse
 # from .forms import Login
-from .forms import CreateUser
+from .forms import CreateUser, SearchForm
 from datetime import date
 
 
@@ -26,6 +26,7 @@ def login_user(request):
                         fine = day * 10
                         u.fine = fine
             context = {
+                'name': u.name,
                 'usn': u.usn,
                 'email': u.email,
                 'fine': u.fine,
@@ -41,7 +42,7 @@ def login_user(request):
 
 
 @login_required()
-def data(request, usn_id):
+def data(request, usn_id,):
     u = get_object_or_404(Student, usn=usn_id)
     context = {
         'usn': u.usn,
@@ -49,7 +50,6 @@ def data(request, usn_id):
         'fine': u.fine,
         'issued': u.issued,
     }
-
     messages.success(request, 'you have logged in...')
     return render(request, 'user.html', context)
 
@@ -67,7 +67,9 @@ def books(request, name=None):
         lis.append({
             'name': i.name,
             'isbn': i.isbn,
-            'issue': i.issue
+            'issue': i.issue,
+            'author': i.author,
+            'available_on': i.ret_date,
         })
     print(lis)
     return render(request, "book.html", {'list': lis})
@@ -81,6 +83,48 @@ def createuser(request):
         form.save()
     context = {
         'form': form
-
     }
     return render(request, 'createuser.html', context)
+
+
+def home(request):
+    return render(request, 'home.html', {})
+
+
+def rules(request, id=None):
+    if id:
+        t = get_object_or_404(Student, id=id)
+        context = {
+            'name': t.name,
+        }
+        return render(request, 'rules.html', context)
+    else:
+        return render(request, 'rules.html', {})
+
+
+def secret(request):
+    return render(request, 'secret.html', {})
+
+
+def search(request):
+    form = SearchForm(request.POST)
+    if form.is_valid():
+        query = form.cleaned_data['query']
+        print(query)
+        obj = Book.objects.filter(name__icontains=query)
+        lis = []
+        for i in obj:
+            lis.append({
+                'name': i.name,
+                'isbn': i.isbn,
+                'issue': i.issue,
+                'author': i.author,
+                'available_on': i.ret_date,
+            })
+        print(lis)
+        return render(request, "book.html", {'list': lis})
+    return render(request, 'search.html', {'form': form})
+
+
+def contact(request):
+    return render(request, 'contact_us.html', {})

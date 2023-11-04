@@ -7,6 +7,10 @@ class Login(forms.Form):
     password = forms.CharField(label='password', max_length=20)
 
 
+class SearchForm(forms.Form):
+    query = forms.CharField()
+
+
 class CreateUser(forms.ModelForm):
     email = forms.CharField(widget=forms.Textarea(attrs={
         'class': "email-field",
