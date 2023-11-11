@@ -1,20 +1,29 @@
 <div class="navbar">
 <div class="logo">
-    <h1>CSE LIBRARY</h1>
+    <h1>LIBRARY</h1>
 </div>
-  <a href="{% url 'home'%}">Home</a>
-  <a href="{% url 'books' %}">Books</a>
-  <a href="#journals">Journals</a>
+{% if user.is_authenticated %}
+  <a href="{% url 'librarian'%}">DASHBOARD</a>
+  <a href="{% url 'lib_book'%}"> Books</a>
+  <a href="{% url 'lib_mag' %}">Magazine</a>
+  <a href="{% url 'lib_staff' %}">Staff</a>
+  <a href="{% url 'lib_student' %}">Students</a>
+  <a href="{% url 'lib_issue' %}">Issue</a>
+  <a href="{% url 'lib_return' %}">Return</a>
+  <a href="{% url 'repay_due' %}">Pay amount</a>
+  <a href="{% url 'logout_user' %}">Logout</a>
 
-    {% if instance %}
-    <a href="/rules/{{ instance.id }}/">Rules</a>
-    {% else %}
-    <a href="{% url 'rules' %}">Rules</a>
-    {% endif %}
-  <a href="{% url 'contact' %}">Contact</a>
-<a href="{% url 'login_user' %}">Login</a>
-    <a href="{% url 'logout_user' %}">Logout</a>
-   {% if user.is_authenticated %}
-<a href="{% url 'createuser' %}">Register</a>
+   {%else %}
+   <a href="{% url 'home'%}">Home</a>
+   <a href="{% url 'books' %}">Books</a>
+   <a href="{% url 'reference'}">Reference</a>
+ 
+     {% if instance %}
+     <a href="/rules/{{ instance.id }}/">Rules</a>
+     {% else %}
+     <a href="{% url 'rules' %}">Rules</a>
+     {% endif %}
+   <a href="{% url 'contact' %}">Contact</a>
+ <a href="{% url 'login_user' %}">Login</a>
 {% endif %}
 </div>

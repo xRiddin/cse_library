@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block content %}
+<button onclick="window.location.href = '{% url 'add_student' %}';">Add Book</button>
+
+<table>
+    <th>Name</th><th>USN</th><th>Email</th><th>Phone</th><th>Fine</th><th>Issued Book</th><th>return date</th><th>Edit</th>
+<tbody>
+    {% for i in list %}
+      <tr>
+        <td>{{i.name}}</td>
+        <td>{{i.usn}}</td>
+        <td>{{i.email}}</td>
+        <td>{{i.phone}}</td>
+        <td>{{i.fine}}</td>
+        <td>{{i.issued_book }}</td>
+        {% if i.issued_book %}
+        <td>{{i.ret_date}}</td>
+        {% else %}
+        <td>------</td>
+        {% endif %}
+      
+      <td><a href="{% url 'edit_student' i.id %}">Edit</a></td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
+{% include 'footer.html' %}

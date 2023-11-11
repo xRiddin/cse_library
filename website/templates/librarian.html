@@ -1,0 +1,13 @@
+{% include 'base.html' %}
+
+{% block content %}
+<button type="button" class="btn btn-primary" onclick="location.href='{% url 'lib_book' %}'">Books</button>
+<button type="button" class="btn btn-primary" onclick="location.href='{% url 'lib_mag' %}'">Magazine</button>
+<button type="button" class="btn btn-primary" onclick="location.href='{% url 'lib_staff' %}'">Staff</button>
+<button type="button" class="btn btn-primary" onclick="location.href='{% url 'lib_student' %}'">Students</button>
+<button type="button" class="btn btn-primary" onclick="location.href='{% url 'lib_issue' %}'">Issue</button>
+
+<button type="button" class="btn btn-primary" onclick="location.href='{% url 'lib_return' %}'">Return</button>
+<button type="submit" class="btn btn-primary" onclick="location.href='{% url 'lib_auto' %}'">Automate</button>
+{% endblock %}
+{% include 'footer.html' %}

@@ -1,0 +1,41 @@
+{% include 'base.html' %}
+{% block content %}
+{% for message in messages %}
+<div class="alert alert-{{ message.tags }}">
+  {{ message }}
+</div>
+{% endfor %}
+
+<div class="d-flex justify-content-center">
+  <div class="card p-5 bg-light rounded">
+    <form action="{% url 'lib_issue' %}" method="post">
+      {% csrf_token %}
+      <div class="form-group mb-3">
+        <label for="student_id">Student/Staff ID:</label>
+        <input type="text" name="id" class="form-control" required>
+      </div>
+      <div class="form-group mb-3">
+        <label for="book_isbn">Book ISBN:</label>
+        <input type="text" name="isbn" class="form-control" required>
+      </div>
+      <div class="form-group mb-3">
+        <label>Return Date</label>
+        <input type="date" name="return_date" class="form-control" placeholder="{{ return_date }}">
+      </div>
+      <button type="submit" class="btn btn-primary">Issue Book</button>
+    </form>
+  </div>
+</div>
+
+{% if name %}
+<div class="card mt-5 mx-auto" style="width: 18rem;">
+  <div class="card-body">
+    <h5 class="card-title">{{ name }}</h5>
+    <h6 class="card-subtitle mb-2 text-muted">{{ book }}</h6>
+    <p class="card-text">Issue Date:{{ issue_date }}</p>
+    <p class="card-text">Return Date:{{ return_date }}</p>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
+{% include 'footer.html' %}

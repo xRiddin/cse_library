@@ -7,28 +7,20 @@
 </head>
 <body>
 {% include 'base.html' %}
-{% for message in messages %}
-
-    <div class="alert">
-        <a class="close" href="#" data-dismiss="alert">×</a>
-           {{ message }}
-    </div>
-
-{% endfor %}
 {% block content %}
     <section>
-        <div class="form-box">
-            <div class="form-value">
+        <div class="login">
+            <div class="login-value">
                 <form action="{% url 'login_user' %}" method="post">
                     {% csrf_token %}
 
                     <h2>Login</h2>
-                    <div class="inputbox">
+                    <div class="login_box">
                         <ion-icon name="mail-outline"></ion-icon>
                         <input type="text" name="usn" required>
                         <label for="">USN</label>
                     </div>
-                    <div class="inputbox">
+                    <div class="login_box">
                         <ion-icon name="lock-closed-outline"></ion-icon>
                         <input type="password" name="password"required>
                         <label for="">Password</label>

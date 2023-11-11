@@ -1,14 +1,6 @@
 {% extends 'base.html' %}
 {% block content %}
-
-    {% for message in messages %}
-
-    <div class="alert">
-        <a class="close" href="#" data-dismiss="alert">X</a>
-           {{ message }}
-    </div>
-
-{% endfor %}
+    <div class="user">
     <h2 style="font-size: 50px; text-align: center; color: #d24726"> Student Details</h2>
      <h2 style="font-size: 35px; color: coral; text-align: center">Welcome Back, {{ name }}</h2>
     <p align="right"><a href="{% url 'search' %}">Search</a></p>
@@ -44,6 +36,7 @@
         <div class="due-amount"><tr><td>Due Amount: </td><td>{{ fine }}</td></tr>
         </div>
     </table>
+    </div>
     {% include 'footer.html' %}
 {% endblock %}
 

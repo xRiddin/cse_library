@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% block content %}
+<button onclick="window.location.href = '{% url 'add_book' %}';">Add Book</button>
+<style>
+  .book-table {
+    border-collapse: collapse;
+    width: 100%;
+    .book-table th,
+    .book-table td {
+      border: 1px solid black;
+      padding: 8px;
+      overflow: auto;
+    }
+  }
+
+  .book-table th {
+    background-color: #ddd;
+  }
+
+  .book-table tr:nth-child(even) {
+    background-color: #f2f2f2;
+  }
+
+  .book-table-header {
+    font-weight: bold;
+  }
+
+  .book-table-data {
+    text-align: center;
+  }
+
+  .book-table-edit {
+    text-align: center;
+  }
+</style>
+
+<table class="book-table">
+  <thead>
+    <tr>
+      <th class="book-table-header">Name</th>
+      <th class="book-table-header">ISBN</th>
+      <th class="book-table-header">Copies</th>
+      <th class="book-table-header">Author</th>
+      <th class="book-table-header">Available</th>
+      <th class="book-table-header">Available On</th>
+      <th class="book-table-header">Edit</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% if list %}
+      {% for book in list %}
+        <tr>
+          <td class="book-table-data">{{ book.name }}</td>
+          <td class="book-table-data">{{ book.isbn }}</td>
+          <td class="book-table-data">{{ book.copies }}</td>
+          <td class="book-table-data">{{ book.author }}</td>
+          <td class="book-table-data">{{ book.available }}</td>
+          {% if book.available %}
+            <td class="book-table-data">{{ book.available_on }}</td>
+          {% else %}
+            <td class="book-table-data">------</td>
+          {% endif %}
+          <td class="book-table-edit"><a href="{% url 'edit_book' book.id %}">Edit</a></td>
+        </tr>
+      {% endfor %}
+    {% else %}
+      <tr>
+        <td colspan="7">No books found.</td>
+      </tr>
+    {% endif %}
+  </tbody>
+</table>
+{% endblock %}
+{% include 'footer.html' %}

@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block content %}
+<button onclick="window.location.href = '{% url 'add_staff' %}';">Add staff</button>
+
+<table> 
+<tbody>
+    {% for i in list %}
+      <tr>
+        <td>{{i.name}}</td>
+        <td>{{i.staff_id}}</td>
+        <td>{{i.email}}</td>
+        <td>{{i.phone}}</td>
+        <td>{{i.fine}}</td>
+        <td>{{i.issued_book }}</td>
+        {% if i.issued_book %}
+        <td>{{i.ret_date}}</td>
+        {% endif %}
+        <td><a href="{% url 'edit_staff' i.id %}">Edit</a></td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
+{% include 'footer.html' %}
