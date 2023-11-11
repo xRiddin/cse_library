@@ -16,8 +16,9 @@ section{
     background-size: cover;
 }
 
-.form-box{
-    position: relative;
+.login{
+    position:calc(50% - 200px);
+    place-content: center;
     width: 400px;
     height: 450px;
     background: transparent;
@@ -34,12 +35,12 @@ h2{
     color: #fff;
     text-align: center;
 }
-.inputbox{
+.login_box{
     position: relative;
     margin: 50px 0;
     border-bottom: 2px solid #fff;
 }
-.inputbox label{
+.login_box label{
     position: absolute;
     top: 50%;
     left: 5px;
@@ -53,7 +54,7 @@ input:focus ~ label,
 input:valid ~ label{
 top: -5px;
 }
-.inputbox input {
+.login_box input {
     width: 100%;
     height: 50px;
     background: transparent;
@@ -63,7 +64,7 @@ top: -5px;
     padding:0 35px 0 5px;
     color: #fff;
 }
-.inputbox ion-icon{
+.login_box ion-icon{
     position: absolute;
     right: 8px;
     color: #fff;
