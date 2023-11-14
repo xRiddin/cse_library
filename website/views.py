@@ -1,4 +1,7 @@
+import email
+from email import message
 from multiprocessing import context
+from turtle import st
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login, logout, authenticate
@@ -7,8 +10,8 @@ from .models import Book, Student, Magazine, Staff, Reference
 from django.utils import timezone
 from django.http import HttpResponse, JsonResponse
 # from .forms import Login
-from .forms import SearchForm, addStudent, addBook, BookForm, MagForm, StaffForm, StudentForm, addMagazine, addReference, addStaff
-from datetime import date, datetime
+from .forms import SearchForm, addStudent, addBook, BookForm, MagForm, StaffForm, StudentForm, addMagazine, addReference, addStaff, ReferenceForm
+from datetime import date, datetime, timedelta
 import smtplib
 import ssl
 from email.message import EmailMessage
@@ -102,17 +105,29 @@ def lib_staff(request):
     obj = Staff.objects.all()
     lis = []
     for i in obj:
-        lis.append({
+        if i.issued_book.all():
+            for book in i.issued_book.all():
+                lis.append({
             'id': i.id,
             'name': i.name,
             'staff_id': i.staff_id,
-            'email': i.email,
+            'email': i.email, 
             'phone': i.phone,
             'fine': i.fine,
-            'issued_book': i.issued_book,
-            'ret_date': i.issued_book.ret_date,
+            'issued_book': book,
+            'ret_date': book.ret_date,
             #'issued_reference': i.issued_reference,
-        })
+            })
+        else:
+            lis.append({
+                'id': i.id,
+                'name': i.name,
+                'staff_id': i.staff_id,
+                'email': i.email,
+                'phone': i.phone,
+                'fine': i.fine,
+                'issued_book': None,
+            })
     print(lis)
     return render(request, "lib_staff.html", {'list': lis})
 
@@ -122,18 +137,31 @@ def lib_student(request):
     obj = Student.objects.all()
     lis = []
     for i in obj:
-        lis.append({
-            'id': i.id,
-            'name': i.name,
-            'usn': i.usn,
+        if i.issued_Book.all():
+            for book in i.issued_Book.all():
+                lis.append({
+                    'id': i.id,
+                    'name': i.name,
+                    'usn': i.usn,
             'email': i.email,
             'phone': i.phone,
             'fine': i.fine,
-            'issued_book': i.issued_Book,
-            'ret_date': i.issued_Book.ret_date,
+            'issued_book': book,
+            'ret_date': book.ret_date,
 
             #'issued_reference': i.issued_Reference,
-        })
+                })
+        else:
+            lis.append({
+                'id': i.id,
+                'name': i.name,
+                'usn': i.usn,
+                'email': i.email,
+                'phone': i.phone,
+                'fine': i.fine,
+                'issued_book': None,
+                })
+
     print(lis)
     return render(request, "lib_student.html", {'list': lis})
 
@@ -144,6 +172,7 @@ def lib_reference(request):
     lis = []
     for i in obj:
         lis.append({
+            'id': i.id,
             'name': i.name,
             'isbn': i.isbn,
             'available': i.available,
@@ -212,18 +241,23 @@ def lib_issue(request):
                 if Book.objects.filter(issue_to=student.usn, isbn=isbn).exists():
                     messages.error(request, 'This book is already issued to the student')
                     return redirect('lib_issue')
-                if student and student.issued_Book.count() >= 3:
+                if student and student.issued_Book.all().count() >= 3:
                     messages.error(request, 'You can issue only 2 books')
+                    return redirect('lib_issue')
+                if book and book.copies == 0:
+                    messages.error(request, 'Book not available')
                     return redirect('lib_issue')
                 if book:
                     if student.fine == 0:
                         student.issued_Book.add(book)
-                        student.issued_Book.issue_date = datetime.today()
+                        book.issue_date = datetime.today()
                     else:
                         messages.error(request, 'You have fine of Rs.'+str(student.fine))
                         return redirect('lib_issue') 
                     if ret:
-                           book.ret_date = ret
+                        book.ret_date = ret
+                    else:
+                        book.ret_date = date.today() + timedelta(days=60)
                     book.issue_to = str(student.usn)
                     student.save()
                     book.save()
@@ -249,6 +283,8 @@ def lib_issue(request):
                     staff.issued_book.add(book)
                     if ret:
                         book.ret_date = ret
+                    else:
+                        book.ret_date = date.today() + timedelta(days=60)
                     book.issue_to = str(staff.staff_id)
                     staff.save()
                     book.save()
@@ -260,9 +296,6 @@ def lib_issue(request):
         if book and book.copies > 0:
             book.copies -= 1
             book.save()
-        else:
-            messages.error(request, 'Book not available')
-            return redirect('lib_issue')
         context = {
             'name': student.name if student else staff.name,
             'book': book.name,
@@ -315,7 +348,7 @@ def lib_return(request):
                 messages.error(request, "Invalid, no book issued")
                 return redirect('lib_return')
 
-        if book and book.copies > 0:
+        if book:
             book.copies += 1
             book.save()
             
@@ -337,6 +370,7 @@ def repay_due(request):
     if request.method == 'POST':
         id = request.POST.get('id')
         amount = request.POST.get('amount')
+        student = None
         if id and amount:
             if 'cs' in id:
                 student = Student.objects.filter(usn=id).first()
@@ -382,6 +416,9 @@ def repay_due(request):
             }
             messages.success(request, 'Fine paid successfully')
             return render(request, 'payment.html', context)
+        else:
+            messages.error(request, 'Invalid details')
+            return redirect('repay_due')
     return render(request, 'payment.html', {})
                 
 
@@ -393,6 +430,11 @@ def edit_book(request, book_id):
         form = BookForm(request.POST, instance=book)
         if form.is_valid():
             form.save()
+            messages.success(request, 'Book edited successfully')
+            return redirect('lib_book')
+        else:
+            messages.error(request, 'Invalid details')
+            print(form.errors)  # Debugging statement
             return redirect('lib_book')
     else:
         form = BookForm(instance=book)
@@ -411,6 +453,18 @@ def edit_magazine(request, magazine_id):
         form = MagForm(instance=magazine)
     return render(request, 'edit_magazine.html', {'form': form})
 
+
+@login_required()
+def edit_reference(request, reference_id):
+    reference = get_object_or_404(Reference, id=reference_id)
+    if request.method == "POST":
+        form = ReferenceForm(request.POST, instance=reference)
+        if form.is_valid():
+            form.save()
+            return redirect('lib_reference')
+    else:
+        form = MagForm(instance=reference)
+    return render(request, 'edit_reference.html', {'form': form})
 
 @login_required()
 def edit_student(request, student_id):
@@ -432,8 +486,13 @@ def edit_staff(request, staff_id):
         form = StaffForm(request.POST, instance=staff)
         if form.is_valid():
             form.save()
+            messages.success(request, 'Staff edited successfully')
+            return redirect('lib_staff')
+        else:
+            messages.error(request, 'Invalid details')
             return redirect('lib_staff')
     else:
+
         form = StaffForm(instance=staff)
     return render(request, 'edit_staff.html', {'form': form})
 
@@ -452,6 +511,19 @@ def books(request, name=None):
     return render(request, "book.html", {'list': lis})
 
 
+def reference(request):
+    obj = Reference.objects.all()
+    lis = []
+    for i in obj:
+        lis.append({
+            'name': i.name,
+            'isbn': i.isbn,
+            'available': i.available,
+            'author': i.author,
+        })
+    print(lis)
+    return render(request, "reference.html", {'list': lis})
+
 @login_required()
 def createuser(request):
     print(request.user)
@@ -467,14 +539,24 @@ def createuser(request):
 @login_required()
 def add_book(request):
     print(request.user)
-    form = addBook(request.POST)
-    if form.is_valid():
-        form.save()
-    context = {
-        'form': form
-    }
-    return render(request, 'add_book.html', context)
-
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        isbn = request.POST.get('isbn')
+        author = request.POST.get('author')
+        copies = request.POST.get('copies')
+        category = request.POST.get('category')
+        if name and isbn and author and copies and category:
+            if Book.objects.filter(isbn=isbn).exists():
+                messages.error(request, 'Book already exists')
+                return redirect('add_book')
+            else:
+                book = Book(name=name, isbn=isbn, author=author, copies=copies, category=category)
+                book.save()
+                messages.success(request, 'Book added successfully')
+                return redirect('add_book')
+        return render(request, 'add_book.html', {})
+    else:
+        return render(request, 'add_book.html', {})
 
 @login_required()
 def add_magazine(request):
@@ -490,26 +572,48 @@ def add_magazine(request):
 
 @login_required()
 def add_staff(request):
-    print(request.user)
-    form = addStaff(request.POST)
-    if form.is_valid():
-        form.save()
-    context = {
-        'form': form
-    }
-    return render(request, 'add_staff.html', context)
+    if request.method == 'POST':
+        print(request.user)
+        name = request.POST.get('name')
+        staff_id = request.POST.get('staff_id')
+        email = request.POST.get('email')
+        phone = request.POST.get('phone')
+        password = request.POST.get('password')
+        if name and staff_id and email and phone and password:
+            if Staff.objects.filter(staff_id=staff_id).exists():
+                messages.error(request, 'Staff already exists')
+                return redirect('add_staff')
+            else:
+                staff = Staff(name=name, staff_id=staff_id, email=email, phone=phone, password=password)
+                staff.save()
+                messages.success(request, 'Staff added successfully')
+                return redirect('add_staff')
+        return render(request, 'add_staff.html', {})
+    else:
+        return render(request, 'add_staff.html', {})
+    
 
 @login_required()
 def add_student(request):
-    print(request.user)
-    form = addStudent(request.POST)
-    if form.is_valid():
-        form.save()
-    context = {
-        'form': form
-    }
-    return render(request, 'add_student.html', context)
-
+    if request.method == 'POST':
+        print(request.user)
+        name = request.POST.get('name')
+        usn = request.POST.get('usn')
+        email = request.POST.get('email')
+        phone = request.POST.get('phone')
+        password = request.POST.get('password')
+        if name and usn and email and phone and password:
+            if Student.objects.filter(usn=usn).exists():
+                messages.error(request, 'student already exists')
+                return redirect('add_student')
+            else:
+                stu = Student(name=name, usn=usn, email=email, phone=phone, password=password)
+                stu.save()
+                messages.success(request, 'Student added successfully')
+                return redirect('add_student')
+        return render(request, 'add_staff.html', {})
+    else:
+        return render(request, 'add_student.html', {})
 
 @login_required()
 def add_reference(request):
@@ -524,6 +628,7 @@ def add_reference(request):
 
 def home(request):
     return render(request, 'home.html', {})
+
 
 
 def rules(request, id=None):

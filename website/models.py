@@ -18,24 +18,26 @@ def get_expiry_staff():
 
 
 def fine(ret_date):
-    ret_date = ret_date.date()
-    days = (ret_date - datetime.today().date())
-    d = days.days
-    if d > 0:
-        print(d)
-        fine = d * 10
-        return fine
-    else:
+    if not ret_date:
         return 0
+    ret_date = ret_date.date()
+    today = datetime.today().date()
+    if ret_date < today:
+        days = (today - ret_date).days
+        fine = days * 10
+        return fine
+    return 0
 
 def fine_staff(ret_date):
-    days = (ret_date - date.today())
-    d = days.days
-    if d > 0:
-        fine = d * 10
-        return fine
-    else:
+    if not ret_date:
         return 0
+    ret_date = ret_date.date() if isinstance(ret_date, datetime) else ret_date
+    today = date.today()
+    if ret_date < today:
+        days = (today - ret_date).days
+        fine = days * 10
+        return fine
+    return 0
 
 class Book(models.Model):
     # issue_to = models.ForeignKey('Student', on_delete=models.CASCADE, null=True, blank=True)
@@ -50,7 +52,7 @@ class Book(models.Model):
     issue_to = models.CharField(max_length=200, default=None, blank=True, null=True)
 
     def __str__(self):
-        return f"Book: {self.name} ; ISBN: {self.isbn} ; Author: {self.author} ; category: {self.category} ; copies: {self.copies}; Available: {self.available}; ID: {self.issue_to} ; From: {self.issue_date}; Till: {self.ret_date})"
+        return f"Book: {self.name} || ISBN: {self.isbn} || Author: {self.author} || copies: {self.copies} || category: {self.category} || ID: {self.issue_to} || From: {self.issue_date} || Till: {self.ret_date})"
 
 
 class Magazine(models.Model):
@@ -79,7 +81,7 @@ class Reference(models.Model):
     issue_to = models.CharField(max_length=200, blank=True, null=True)
 
     def __str__(self):
-        return f"Book: {self.name} ; ISBN: {self.isbn} ; Author: {self.author} ; Issued: {self.available}; copies: {self.copies}; ID: {self.issue_to} ; From: {self.issue_date}; Till: {self.ret_date})"
+        return f"Book: {self.name} ; ISBN: {self.isbn} ; Author: {self.author} ; category: {self.category} Issued: {self.available}; copies: {self.copies}; ID: {self.issue_to} ; From: {self.issue_date}; Till: {self.ret_date})"
 
 
 class Student(models.Model):
@@ -89,7 +91,7 @@ class Student(models.Model):
     email = models.CharField(max_length=50)
     password = models.CharField(max_length=20)
     fine = models.IntegerField(default=0, blank=True)
-    issued_Book = models.ForeignKey(Book, blank=True, null=True, on_delete=models.CASCADE, related_name='student_books')
+    issued_Book = models.ManyToManyField(Book, blank=True, null=True, related_name='student_books')
     # issued_Reference = models.ForeignKey(Reference, blank=True, null=True, on_delete=models.CASCADE, related_name='student_references')
     """
     @property
@@ -97,25 +99,31 @@ class Student(models.Model):
        ...
     """
     def __str__(self):
-        return f"Name: {self.name} ; USN: {self.usn} ; User mail: {self.email} ;  fine: {self.fine} ; Book in Issue: {self.issued_Book} ; Magazine in Issue: {self.issued_Reference} ;"
-
+        return f"Name: {self.name} ; USN: {self.usn} ; User mail: {self.email} ;  fine: {self.fine} ; Book in Issue: {self.issued_Book} ;"
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)  # Save the staff instance first
         
-        if self.issued_Book is None:
-            book = Book.objects.get(name='sample')
-            self.issued_Book = book
+    
+        
         """
         if self.issued_Reference is None:
             reference = Reference.objects.get(name='sample')
             self.issued_Reference = reference
         """
         if self.issued_Book:
-            if self.issued_Book.issue_date and self.issued_Book.ret_date:
-                self.issued_Book.issue_date = datetime.today()
-                self.issued_Book.ret_date = get_expiry()
+            for book in self.issued_Book.all():
+                if book is None:
+                    b = Book.objects.get(name='sample')
+                    book = b
+                if book.issue_date:
+                    book.issue_date = datetime.today()
+                    book.ret_date = get_expiry()
+                    book.save()
+                    super().save(*args, **kwargs)
+                    self.fine = fine(book.ret_date)
                 super().save(*args, **kwargs)
-                self.fine = fine(self.issued_Book.ret_date)
+
+            
         else:
             print("No copies of the book are available.")
         """
@@ -132,7 +140,6 @@ class Student(models.Model):
             print("No copies of the reference are available.")
                     # raise ValidationError("No copies of the reference are available.")
         """
-        super().save(*args, **kwargs)
 
 
 class Staff(models.Model):
@@ -141,7 +148,7 @@ class Staff(models.Model):
     phone = models.IntegerField(default=0)
     password = models.IntegerField()
     fine = models.IntegerField(default=0)
-    issued_book = models.ForeignKey(Book, blank=True, null=True, on_delete=models.CASCADE, related_name='staff_books')
+    issued_book = models.ManyToManyField(Book, blank=True, null=True, related_name='staff_books')
     # issued_reference = models.ForeignKey(Reference, blank=True, null=True, on_delete=models.CASCADE, related_name='staff_references')
     staff_id = models.IntegerField(default=0)
 
@@ -149,19 +156,25 @@ class Staff(models.Model):
         return f"Name: {self.name} ; Staff ID: {self.staff_id} ; Email: {self.email} ; Phone: {self.phone} ; Fine: {self.fine} ; issued book: {self.issued_book} ;"
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
-        if self.issued_book is None:
-            book = Book.objects.get(name='sample')
-            self.issued_book = book
+       
         """
         if self.issued_reference is None:
             reference = Reference.objects.get(name='sample')
             self.issued_reference = reference
         """
         if self.issued_book:
-            self.issued_book.issue_date = datetime.today()
-            self.issued_book.ret_date = get_expiry_staff()
-            super().save(*args, **kwargs)
-            self.fine = fine(self.issued_book.ret_date)
+            for book in self.issued_book.all():
+                if book is None:
+                    b = Book.objects.get(name='sample')
+                    book = b
+                if book.issue_date:
+                    book.issue_date = datetime.today()
+                    book.ret_date = get_expiry_staff()
+                    book.save()
+                    super().save(*args, **kwargs)
+                    self.fine = fine_staff(book.ret_date)
+                super().save(*args, **kwargs)
+            
         else:
             raise ValidationError("No copies of the book are available.")
         """
@@ -176,7 +189,6 @@ class Staff(models.Model):
         else:
             raise ValidationError("No copies of the reference are available.")
         """
-        super().save(*args, **kwargs)
 """
 class Issue(models.Model):
     student = models.ForeignKey(Student, on_delete=models.CASCADE, null=True, blank=True)

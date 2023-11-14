@@ -5,6 +5,7 @@
 {% if user.is_authenticated %}
   <a href="{% url 'librarian'%}">DASHBOARD</a>
   <a href="{% url 'lib_book'%}"> Books</a>
+  <a href="{% url 'lib_reference'%}">Reference</a>
   <a href="{% url 'lib_mag' %}">Magazine</a>
   <a href="{% url 'lib_staff' %}">Staff</a>
   <a href="{% url 'lib_student' %}">Students</a>

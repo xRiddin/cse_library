@@ -1,9 +1,40 @@
 {% extends 'base.html' %}
 {% block content %}
-<button onclick="window.location.href = '{% url 'add_magazine' %}';">Add Magazine</button>
-
+<style>
+  table {
+    border-collapse: collapse;
+    width: 80%;
+    margin: auto;
+  }
+  th, td {
+    text-align: left;
+    padding: 8px;
+  }
+  th {
+    background-color: #4CAF50;
+    color: white;
+  }
+  tr:nth-child(even) {
+    background-color: #f2f2f2;
+  }
+</style>
+<div style="text-align:center;">
+  <button onclick="window.location.href = '{% url 'add_magazine' %}';">Add Magazine</button>
+</div>
+<br>
 <table> 
-<tbody>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>ISBN</th>
+      <th>Copies</th>
+      <th>Author</th>
+      <th>Available</th>
+      <th>Available On</th>
+      <th>Edit</th>
+    </tr>
+  </thead>
+  <tbody>
     {% for i in list %}
       <tr>
         <td>{{i.name}}</td>
@@ -11,15 +42,15 @@
         <td>{{i.copies}}</td>
         <td>{{i.author}}</td>
         <td>{{i.available }}</td>
-      {% if i.available is True %}
-      <td>{{ i.available_on }}</td>
-      {% else %}
-      <td>------</td>
-      {% endif %}
-      <td><a href="{% url 'edit_magazine' i.id %}">Edit</a></td>
+        {% if i.available is True %}
+          <td>{{ i.available_on }}</td>
+        {% else %}
+          <td>------</td>
+        {% endif %}
+        <td><a href="{% url 'edit_magazine' i.id %}">Edit</a></td>
       </tr>
     {% endfor %}
   </tbody>
 </table>
-{% endblock %}
 {% include 'footer.html' %}
+{% endblock %}

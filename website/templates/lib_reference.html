@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% block content %}
+<button onclick="window.location.href = '{% url 'add_reference' %}';">Add Reference</button>
 <style>
   .book-table {
     border-collapse: collapse;
@@ -14,14 +15,11 @@
   }
 
   .book-table th {
-    background-color: #75ab88;
+    background-color: #c74c4c;
   }
 
   .book-table tr:nth-child(even) {
-    background-color: #d3ffda;
-  }
-  .book-table tr:nth-child(odd){
-    background-color: rgb(232, 255, 229);
+    background-color: #f2f2f2;
   }
 
   .book-table-header {
@@ -46,10 +44,7 @@
 }
   }
 </style>
-<div style="text-align:center;">
-
-<button onclick="window.location.href = '{% url 'add_book' %}';">Add Book</button>
-
+<h1>Reference Books</h1>
 <table class="book-table">
   <thead>
     <tr>
@@ -64,19 +59,19 @@
   </thead>
   <tbody>
     {% if list %}
-      {% for book in list %}
+      {% for r in list %}
         <tr>
-          <td class="book-table-data">{{ book.name }}</td>
-          <td class="book-table-data">{{ book.isbn }}</td>
-          <td class="book-table-data">{{ book.copies }}</td>
-          <td class="book-table-data">{{ book.author }}</td>
-          <td class="book-table-data">{{ book.available }}</td>
+          <td class="book-table-data">{{ r.name }}</td>
+          <td class="book-table-data">{{ r.isbn }}</td>
+          <td class="book-table-data">{{ r.copies }}</td>
+          <td class="book-table-data">{{ r.author }}</td>
+          <td class="book-table-data">{{ r.available }}</td>
           {% if book.available %}
-            <td class="book-table-data">{{ book.available_on }}</td>
+            <td class="book-table-data">{{ r.available_on }}</td>
           {% else %}
             <td class="book-table-data">------</td>
           {% endif %}
-          <td class="book-table-edit"><a href="{% url 'edit_book' book.id %}">Edit</a></td>
+          <td class="book-table-edit"><a href="{% url 'edit_reference' r.id %}">Edit</a></td>
         </tr>
       {% endfor %}
     {% else %}
@@ -86,7 +81,6 @@
     {% endif %}
   </tbody>
 </table>
-</div>
 {% include 'footer.html' %}
 {% endblock %}
 

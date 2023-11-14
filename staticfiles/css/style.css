@@ -6,13 +6,12 @@
   src: url("../vin.otf");
 }
 *{
-  font-size: 14px;
   font-family: vintage, sans-serif;
 }
 
 .alert{
   font-family: vintage, sans-serif;
-  font-size: 28px;
+  font-size: 24px;
   text-align: center;
   color: #000000;
 }
@@ -83,15 +82,19 @@ html {
     flex-direction: row;
     flex-wrap: wrap;
     background: rgb(2,0,36); /* Fallback if browser doesn't support gradient */
-    background: linear-gradient(90deg, rgba(2,0,36,1) 0%, rgba(9,26,121,1) 35%, rgba(7,65,150,1) 60%, rgba(4,133,200,1) 85%, rgba(2,193,229,1) 100%, rgba(0,254,255,1) 100%);  /* Make linear gradient background */
   }
   .navbar a {
     float: none;
     display: flex;
+    font-size: 18px;
     text-align: left;
     padding: 14px 8px; /* Reduce horizontal padding for better spacing on small screens */
   }
   *{
     font-family: vintage, sans-serif;
   }
+
+.book-table-edit {
+font-size: 16px
+}
 }

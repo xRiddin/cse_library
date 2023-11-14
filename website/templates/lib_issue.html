@@ -1,30 +1,29 @@
 {% include 'base.html' %}
 {% block content %}
+
 {% for message in messages %}
 <div class="alert alert-{{ message.tags }}">
   {{ message }}
 </div>
 {% endfor %}
 
-<div class="d-flex justify-content-center">
-  <div class="card p-5 bg-light rounded">
-    <form action="{% url 'lib_issue' %}" method="post">
-      {% csrf_token %}
-      <div class="form-group mb-3">
-        <label for="student_id">Student/Staff ID:</label>
-        <input type="text" name="id" class="form-control" required>
-      </div>
-      <div class="form-group mb-3">
-        <label for="book_isbn">Book ISBN:</label>
-        <input type="text" name="isbn" class="form-control" required>
-      </div>
-      <div class="form-group mb-3">
-        <label>Return Date</label>
-        <input type="date" name="return_date" class="form-control" placeholder="{{ return_date }}">
-      </div>
-      <button type="submit" class="btn btn-primary">Issue Book</button>
-    </form>
-  </div>
+<div class="form-container">
+  <form action="{% url 'lib_issue' %}" method="post">
+    {% csrf_token %}
+    <div class="form-group">
+      <label for="student_id">Student/Staff ID:</label>
+      <input type="text" name="id" class="form-control" required>
+    </div>
+    <div class="form-group">
+      <label for="book_isbn">Book ISBN:</label>
+      <input type="text" name="isbn" class="form-control" required>
+    </div>
+    <div class="form-group">
+      <label>Return Date</label>
+      <input type="date" name="return_date" class="form-control" placeholder="{{ return_date }}">
+    </div>
+    <button type="submit" class="btn btn-primary">Issue Book</button>
+  </form>
 </div>
 
 {% if name %}
@@ -38,4 +37,56 @@
 </div>
 {% endif %}
 {% endblock %}
+
+<style>
+  .card {
+    max-width: 500px;
+    margin: 0 auto;
+  }
+  .form-container {
+    max-width: 500px;
+    margin: 0 auto;
+    margin-top: 50px;
+    padding: 20px;
+    padding-top: 20px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #f2f2f2;
+  }
+
+  .form-group {
+    margin-bottom: 20px;
+  }
+
+  label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+  }
+
+  input[type="text"],
+  input[type="date"] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px;
+    box-sizing: border-box;
+  }
+
+  button[type="submit"] {
+    background-color: #4CAF50;
+    color: white;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+  }
+
+  button[type="submit"]:hover {
+    background-color: #45a049;
+  }
+</style>
+
 {% include 'footer.html' %}
