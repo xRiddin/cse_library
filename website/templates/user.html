@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% block content %}
     <div class="user">
-    <h2 style="font-size: 50px; text-align: center; color: #d24726"> Student Details</h2>
+    <h2 style="font-size: 50px; text-align: center; color: #d24726"> User Profile</h2>
      <h2 style="font-size: 35px; color: coral; text-align: center">Welcome Back, {{ name }}</h2>
     <p align="right"><a href="{% url 'search' %}">Search</a></p>
     <hr><hr>
@@ -9,7 +9,7 @@
     <hr>
     <table style="font-size: 30px" class="blue" border="1px" align="center">
     <tr>
-    <th bgcolor="#ff7f50" colspan="2"> Student Info</th>
+    <th bgcolor="#ff7f50" colspan="2"> Details </th>
     </tr>
     <thread>
     <tr>
@@ -23,15 +23,21 @@
     <thread>
         <tr><td>EMAIL:</td> <td> {{ email }}</td></tr>
     </thread>
-        {% if issued is not NoneType %}
+        {% if issued.name is not None %}
             <div class="issued-book">
-        <tr><td>Issued Book:</td><td>{{ issued.name }}</td></tr>
-                <tr><td>ISBN: </td><td>{{ issued.isbn }}</td></tr>
-                <tr><td>Issue date: </td><td>{{ issued.issue_date }}</td></tr>
-                <tr><td>Return date: </td><td>{{ issued.ret_date }}</td></tr>
+                {% for book in book_list %}
+        <tr><td>Issued Book:</td><td>{{ name }}</td></tr>
+                <tr><td>ISBN: </td><td>{{ isbn }}</td></tr>
+                <tr><td>Issue date: </td><td>{{ issue_date }}</td></tr>
+                <tr><td>Return date: </td><td>{{ ret_date }}</td></tr>
+                {% endfor %}
             </div>
     {% else %}
             <tr><td>Issued Book: </td><td>------</td></tr>
+            <tr><td>ISBN: </td><td>-------</td></tr>
+            <tr><td>Issue date: </td><td>-------</td></tr>
+            <tr><td>Return date: </td><td>-------</td></tr>
+
     {% endif %}
         <div class="due-amount"><tr><td>Due Amount: </td><td>{{ fine }}</td></tr>
         </div>

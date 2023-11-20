@@ -77,6 +77,13 @@
                 {{ form.author }}
             </div>
             <div class="form-group">
+                <label for="{{ form.edition.id_for_label }}">Edition:</label>
+                {{ form.edition }}
+            </div>
+            <div class="form-group">
+                <label for="{{ form.reference.id_for_label }}">Reference:</label>
+                {{ form.reference }}
+            <div class="form-group">
                 <label for="{{ form.copies.id_for_label }}">Copies:</label>
                 {{ form.copies }}
             </div>
@@ -88,10 +95,7 @@
                 <label for="{{ form.ret_date.id_for_label }}">RETURN DATE:</label>
                 {{ form.ret_date }}
             </div>
-            <div class="form-group">
-                <label for="{{ form.available.id_for_label }}">Available:</label>
-                {{ form.available }}
-            </div>
+        
             <button type="submit" class="btn btn-primary">UPDATE</button>
         </form>
     </div>

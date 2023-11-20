@@ -128,10 +128,19 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-AUTHENTICATION_BACKENDS = [
-    'website.backends.SQLiteBackend',
-    'django.contrib.auth.backends.ModelBackend',
-]
 
-LOGIN_URL = 'login_usn'
+LOGIN_URL = 'login_user'
 
+# settings.py
+
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = '/media/'
+
+AUTH_USER_MODEL = 'website.Users'
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'your-email@gmail.com'  # your email
+EMAIL_HOST_PASSWORD = 'your-email-password'  # your email password

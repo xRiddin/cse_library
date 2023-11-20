@@ -1,7 +1,8 @@
 from django.contrib import admin
-from .models import Student, Book, Staff, Reference, Magazine
+# from .models import Student, Book, Staff, Reference, Magazine
 # from .forms import BookAdminForm
 
+"""
 
 class StudAdmin(admin.ModelAdmin):
 
@@ -38,14 +39,14 @@ class BookAdmin(admin.ModelAdmin):
                     # 'issue_date',
                     # 'ret_date'
                     )
-    """
+    
     raw_id_fields = ('issue_to',)
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == 'issue_to':
             kwargs['queryset'] = Student.objects.filter(issue=False)
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
-    """
+    
     # form = BookAdminForm
 
 
@@ -82,4 +83,4 @@ admin.site.register(Reference)
 admin.site.register(Magazine)
 admin.site.register(Staff, StaffAdmin)
 
-
+"""

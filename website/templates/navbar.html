@@ -3,28 +3,45 @@
     <h1>LIBRARY</h1>
 </div>
 {% if user.is_authenticated %}
+{% if user.user_type == 1 %}
+
   <a href="{% url 'librarian'%}">DASHBOARD</a>
   <a href="{% url 'lib_book'%}"> Books</a>
-  <a href="{% url 'lib_reference'%}">Reference</a>
   <a href="{% url 'lib_mag' %}">Magazine</a>
+  <a href="{% url 'lib_files' %}">Resources</a>
   <a href="{% url 'lib_staff' %}">Staff</a>
   <a href="{% url 'lib_student' %}">Students</a>
   <a href="{% url 'lib_issue' %}">Issue</a>
   <a href="{% url 'lib_return' %}">Return</a>
   <a href="{% url 'repay_due' %}">Pay amount</a>
-  <a href="{% url 'logout_user' %}">Logout</a>
 
-   {%else %}
+  {% elif user.user_type == 3 %}
    <a href="{% url 'home'%}">Home</a>
    <a href="{% url 'books' %}">Books</a>
-   <a href="{% url 'reference'}">Reference</a>
- 
+   <a href="{% url 'mag' %}">Magazines</a>
+   <a href="{% url 'files' %}">Resources</a>
      {% if instance %}
      <a href="/rules/{{ instance.id }}/">Rules</a>
      {% else %}
      <a href="{% url 'rules' %}">Rules</a>
      {% endif %}
-   <a href="{% url 'contact' %}">Contact</a>
- <a href="{% url 'login_user' %}">Login</a>
-{% endif %}
+   <a href="{% url 'contact' %}">Contact Us</a>
+   {% elif user.user_type == 2 %}
+    <a href="{% url 'staff_dashboard' user.id %}">Dashboard</a>
+    <a href="{% url 'books' %}">Books</a>
+    <a href="{% url 'mag' %}">Magazines</a>
+    <a href="{% url 'files' %}">Resources</a>
+    <a href="{% url 'staff_files' user.id %}">Upload</a>
+    <a href="{% url 'staff_about' user.id %}">Profile</a>
+   {% endif %}
+   <a href="{% url 'logout_user' %}">Logout</a>
+   {% else %}
+   <a href="{% url 'home'%}">Home</a>
+    <a href="{% url 'books' %}">Books</a>
+    <a href="{% url 'mag' %}">Magazines</a>
+    <a href="{% url 'files' %}">Resources</a>
+    <a href="{% url 'rules' %}">Rules</a>
+    <a href="{% url 'contact' %}">Contact Us</a>
+    <a href="{% url 'login_user' %}">Login</a>
+    {% endif %}
 </div>

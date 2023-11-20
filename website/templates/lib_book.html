@@ -12,7 +12,9 @@
       overflow: auto;
     }
   }
-
+  .navbar{
+       background-color: #007bff; 
+    }
   .book-table th {
     background-color: #75ab88;
   }
@@ -55,9 +57,11 @@
     <tr>
       <th class="book-table-header">Name</th>
       <th class="book-table-header">ISBN</th>
-      <th class="book-table-header">Copies</th>
+      <th class="book-table-header">Edition</th>
+      <th class="book-table-header">Volumes</th>
+      <th class="book-table-header">Reference</th>
       <th class="book-table-header">Author</th>
-      <th class="book-table-header">Available</th>
+      <th class="book-table-header">Issue Date</th>
       <th class="book-table-header">Available On</th>
       <th class="book-table-header">Edit</th>
     </tr>
@@ -68,12 +72,15 @@
         <tr>
           <td class="book-table-data">{{ book.name }}</td>
           <td class="book-table-data">{{ book.isbn }}</td>
+          <td class="book-table-data">{{ book.edition }}</td>
           <td class="book-table-data">{{ book.copies }}</td>
+          <td class="book-table-data">{{book.reference }}</td>
           <td class="book-table-data">{{ book.author }}</td>
-          <td class="book-table-data">{{ book.available }}</td>
-          {% if book.available %}
+          {% if book.issue_date %}
+            <td class="book-table-data">{{ book.issue_date }}</td>
             <td class="book-table-data">{{ book.available_on }}</td>
           {% else %}
+            <td class="book-table-data">------</td>
             <td class="book-table-data">------</td>
           {% endif %}
           <td class="book-table-edit"><a href="{% url 'edit_book' book.id %}">Edit</a></td>

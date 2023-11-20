@@ -1,98 +1,92 @@
-{% include 'base.html' %}
-<head><style media="screen">
-    table{
-        background-color: #f7f0e4;
-    }
-    #h1{
-        font-size: 28px;
-    }
-table.booktable {
-border: 2px solid #A40808;
-background-color: #EEE7DB;
-width: 100%;
-text-align: center;
-border-collapse: collapse;
-}
-table.booktable td, table.redTable th {
-    font-size: 24px;
-border: 1px solid #AAAAAA;
-padding: 3px 2px;
-}
-table.booktable tbody td {
-font-size: 24px;
-}
-table.booktable tr:nth-child(even) {
-background: #F5C8BF;
-}
-table.booktable thead {
-background: #A40808;
-}
-table.booktable thead th {
-font-size: 24px;
-font-weight: bold;
-color: #FFFFFF;
-text-align: center;
-border-left: 2px solid #A40808;
-}
-table.booktable thead th:first-child {
-border-left: none;
-}
 
-table.booktable tfoot {
-font-size: 18px;
-font-weight: bold;
-color: #FFFFFF;
-background: #A40808;
-}
-table.booktable tfoot td {
-font-size: 13px;
-}
-table.booktable tfoot .links {
-text-align: right;
-}
-table.booktable tfoot .links a{
-display: inline-block;
-background: #FFFFFF;
-color: #A40808;
-padding: 2px 8px;
-border-radius: 5px;
-}
-</style></head>
+{% extends 'base.html' %}
 {% block content %}
-    <div class="table">
-    <h1 align="center" style="font-size: 50px">Availvable Books</h1>
-<table class="booktable">
-<thead>
-<tr>
-<th>Book Name</th>
-<th>ISBN</th>
-<th>Author</th>
-<th>Issued</th>
-    <th> Available On</th>
-</tr>
-</thead>
-<tfoot>
-<tr>
-<td colspan="5" rowspan="5">
-<div class="links"></div>
-</td>
-</tr>
-</tfoot>
-<tbody>
-  {% for i in list %}
+<style>
+  .book-table {
+    border-collapse: collapse;
+    width: 80%;
+    margin: auto;
+    .book-table th,
+    .book-table td {
+      border: 1px solid black;
+      font-size: 24px;
+      padding: 8px;
+      overflow: auto;
+    }
+  }
+
+  .book-table th {
+    background-color: #75ab88;
+  }
+
+  .book-table tr:nth-child(even) {
+    background-color: #d3ffda;
+  }
+  .book-table tr:nth-child(odd){
+    background-color: rgb(232, 255, 229);
+  }
+
+  .book-table-header {
+    font-weight: bold;
+  }
+
+  .book-table-data {
+    text-align: center;
+  }
+
+  .book-table-edit {
+    text-align: center;
+  }
+  @media (max-width: 768px) {
+    .book-table {
+      display: block;
+      overflow-x: auto;
+      border-collapse: collapse;
+    }
+    td.book-table-data {
+    font-size: small;
+}
+  }
+</style>
+<div style="text-align:center;">
+    <h1> Books </h1>
+<table class="book-table">
+  <thead>
     <tr>
-      <td>{{i.name}}</td>
-      <td>{{i.isbn}}</td>
-      <td>{{i.author}}</td>
-      <td>{{i.available }}</td>
-    {% if i.available is True %}
-    <td>{{ i.available_on }}</td>
-    {% else %}
-    <td>------</td>
-    {% endif %}
+      <th class="book-table-header">Name</th>
+      <th class="book-table-header">ISBN</th>
+      <th class="book-table-header">Edition</th>
+      <th class="book-table-header">Volumes</th>
+      <th class="book-table-header">Reference</th>
+      <th class="book-table-header">Author</th>
+      <th class="book-table-header">Available On</th>
     </tr>
-  {% endfor %}
-</tbody>
+  </thead>
+  <tbody>
+    {% if list %}
+      {% for book in list %}
+        <tr>
+          <td class="book-table-data">{{ book.name }}</td>
+          <td class="book-table-data">{{ book.isbn }}</td>
+          <td class="book-table-data">{{ book.edition }}</td>
+          <td class="book-table-data">{{ book.copies }}</td>
+          <td class="book-table-data">{{book.reference }}</td>
+          <td class="book-table-data">{{ book.author }}</td>
+          {% if book.available_on %}
+            <td class="book-table-data">{{ book.available_on }}</td>
+          {% else %}
+            <td class="book-table-data">------</td>
+          {% endif %}
+        </tr>
+      {% endfor %}
+    {% else %}
+      <tr>
+        <td colspan="7">No books found.</td>
+      </tr>
+    {% endif %}
+  </tbody>
 </table>
-    </div>
+</div>
+{% include 'footer.html' %}
 {% endblock %}
+

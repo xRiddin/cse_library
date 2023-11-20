@@ -1,6 +1,6 @@
 import re
 from django import forms
-from .models import Student, Book, Magazine, Staff, Reference
+from .models import  Book, Magazine,Users
 
 
 class Login(forms.Form):
@@ -12,32 +12,42 @@ class SearchForm(forms.Form):
     query = forms.CharField()
 
 
+class UserForm(forms.ModelForm):
+    name = forms.CharField(label='Name', max_length=100, widget=forms.TextInput(attrs={'placeholder': 'Enter name'}))
+    email = forms.CharField(label='Email', max_length=100, widget=forms.TextInput(attrs={'placeholder': 'Enter email'}))
+    id_number = forms.CharField(label='id_number', max_length=100, widget=forms.TextInput(attrs={'placeholder': 'Enter ID Number'}))
+    phone = forms.IntegerField(label='Phone', widget=forms.NumberInput(attrs={'min': '1'}))
+    class Meta:
+        model = Users
+        fields = ['name', 'email', 'id_number', 'phone', 'fine']
+
+
 class BookForm(forms.ModelForm):
     name = forms.CharField(label='Name', max_length=100, widget=forms.TextInput(attrs={'placeholder': 'Enter book name'}))
     isbn = forms.CharField(label='ISBN', max_length=13, widget=forms.TextInput(attrs={'placeholder': 'Enter ISBN'}))
+    
     category = forms.CharField(label='category', max_length=200, widget=forms.TextInput(attrs={'placeholder': 'Enter category'}))
     author = forms.CharField(label='Author', max_length=100, widget=forms.TextInput(attrs={'placeholder': 'Enter author name'}))
     copies = forms.IntegerField(label='Copies', widget=forms.NumberInput(attrs={'min': '1'}))
+    reference = forms.BooleanField(label='Reference', required=False)
     issue_date = forms.DateField(label='issue_date', widget=forms.DateInput(attrs={'type': 'date'}), required=False)
     ret_date = forms.DateField(label='ret_date', widget=forms.DateInput(attrs={'type': 'date'}), required=False)
-    available = forms.BooleanField(label='Available', required=False)
-    
+    edition = forms.IntegerField(label='Edition', widget=forms.NumberInput(attrs={'min': '1'}) )
     class Meta:
         model = Book
-        fields = ['name', 'category', 'isbn', 'author', 'copies', 'issue_date', 'ret_date', 'available']
+        fields = ['name','isbn', 'edition', 'category', 'author', 'reference', 'copies', 'issue_date', 'ret_date', ]
 
 
 class MagForm(forms.ModelForm):
     name = forms.CharField(label='Magazine Name', max_length=100, widget=forms.TextInput(attrs={'placeholder': 'Enter magazine name'}))
     isbn = forms.CharField(label='ISBN', max_length=13, widget=forms.TextInput(attrs={'placeholder': 'Enter ISBN'}))
     author = forms.CharField(label='Author', max_length=100, widget=forms.TextInput(attrs={'placeholder': 'Enter author name'}))
-    copies = forms.IntegerField(label='Copies', widget=forms.NumberInput(attrs={'min': '1'}))
-    #available = forms.BooleanField(label='Available', required=False)
     category = forms.CharField(label='category', max_length=200, widget=forms.TextInput(attrs={'placeholder': 'Enter category'}))
+    edition = forms.IntegerField(label='Edition', widget=forms.NumberInput(attrs={'min': '1'}) )
     class Meta:
         model = Magazine
-        fields = ['name', 'isbn', 'author', 'copies', 'category' ]
-
+        fields = ['name', 'edition', 'isbn', 'author', 'category' ]
+"""
 class StaffForm(forms.ModelForm):
     name = forms.CharField(label='Name', max_length=100, widget=forms.TextInput(attrs={'placeholder': 'Enter name'}))
     staff_id = forms.CharField(label='staff_id', max_length=20, widget=forms.TextInput(attrs={'placeholder': 'Enter staff ID'}))
@@ -124,6 +134,9 @@ class addBook(forms.ModelForm):
     category = forms.CharField(widget=forms.TextInput(attrs={
         'class': 'form-control',
     }))
+    edition = forms.CharField(widget=forms.NumberInput(attrs={
+        'class': 'form-control',
+    }))
 
     class Meta:
         model = Book
@@ -133,10 +146,10 @@ class addBook(forms.ModelForm):
             'author',
             'category',
             'copies',
-            
+            'edition',
             
         ]
-
+"""
 
 class addMagazine(forms.ModelForm):
     name = forms.CharField(widget=forms.Textarea(attrs={
@@ -169,10 +182,9 @@ class addMagazine(forms.ModelForm):
             'author',
             'copies',
             'category',
-            'available',
         ]
 
-
+"""
 class addStaff(forms.ModelForm):
     name = forms.CharField(label='name', widget=forms.Textarea(attrs={
     'rows': 1}))
@@ -216,12 +228,13 @@ class addReference(forms.ModelForm):
         'class': 'copies-field',
         'rows': 1
     }))
-    available = forms.CharField(widget=forms.Textarea(attrs={
-        'class': 'available-field',
-        'rows': 1
-    }))
+    
     category = forms.CharField(widget=forms.Textarea(attrs={
         'class': 'category-field',
+        'rows': 1
+    }))
+    edition = forms.IntegerField(widget=forms.Textarea(attrs={
+        'class': 'edition-field',
         'rows': 1
     }))
 
@@ -233,5 +246,6 @@ class addReference(forms.ModelForm):
             'author',
             'copies',
             'category',
-            'available',
+            'edition',
         ]
+"""

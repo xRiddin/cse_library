@@ -39,55 +39,33 @@
         background-color: #0069d9;
         color: #fff;
     }
-    .navbar{
-       background-color: #007bff; 
-    }
-    h2{
-        text-align: center;
-        margin-top: 50px;
-        font-size: 40px;
-        color:#0048d9
-    
-    }
 </style>
-
-<h2> Admin Dashboard</h2>
-
+<h1> STAFF DASHBOARD </h1>
 <div class="card-deck">
     <div class="card">
         <h5 class="card-title">Books</h5>
         <p class="card-text">View and Add books</p>
-        <a href="{% url 'lib_book' %}" class="card-link">Go to Books</a>
+        <a href="{% url 'books' %}" class="card-link">Go to Books</a>
     </div>
     <div class="card">
         <h5 class="card-title">Magazine</h5>
         <p class="card-text">View and Add magazines</p>
-        <a href="{% url 'lib_mag' %}" class="card-link">Go to Magazines</a>
+        <a href="{% url 'mag' %}" class="card-link">Go to Magazines</a>
     </div>
     <div class="card">
-        <h5 class="card-title">Staff</h5>
-        <p class="card-text">View and Add staff members</p>
-        <a href="{% url 'lib_staff' %}" class="card-link">Go to Staff</a>
+        <h5 class="card-title">Profile</h5>
+        <p class="card-text">View details</p>
+        <a href="{% url 'staff_about' user.id %}" class="card-link">Go to Profile</a>
     </div>
     <div class="card">
-        <h5 class="card-title">Students</h5>
-        <p class="card-text">View and Add students</p>
-        <a href="{% url 'lib_student' %}" class="card-link">Go to Students</a>
+        <h5 class="card-title">Upload</h5>
+        <p class="card-text">upload</p>
+        <a href="{% url 'staff_files' user.id %}" class="card-link">Go to upload</a>
     </div>
     <div class="card">
-        <h5 class="card-title">Issue</h5>
-        <p class="card-text">Issue books and magazines</p>
-        <a href="{% url 'lib_issue' %}" class="card-link">Go to Issue</a>
-    </div>
-    <div class="card">
-        <h5 class="card-title">Return</h5>
-        <p class="card-text">Return books and magazines</p>
-        <a href="{% url 'lib_return' %}" class="card-link">Go to Return</a>
-    </div>
-    <div class="card">
-        <h5 class="card-title">Automate</h5>
-        <p class="card-text">Automate library tasks</p>
-        <a href="{% url 'lib_auto' %}" class="card-link">Go to Automate</a>
+        <h5 class="card-title"> Resources</h5>
+        <p class="card-text"> Access notes and other resources</p>
+        <a href="{% url 'files' %}" class="card-link">Resources</a>
     </div>
 </div>
 {% endblock %}

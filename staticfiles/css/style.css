@@ -17,6 +17,7 @@
 }
 body {
   font-family: vintage, sans-serif;
+  margin: 0;
 }
 
 h1 {
@@ -37,12 +38,14 @@ nav{
 }
 * {
   box-sizing: border-box;
+
 }
 .navbar {
   width: 100%;
   display: flex;
   justify-content: space-around;
   color: #f2f2f2;
+  margin:0;
 }
 
 li {
@@ -66,11 +69,7 @@ li {
   background-color: #ddd;
   color: black;
 }
-body,
-html {
-  margin: 0;
-  padding: 0;
-}
+
 
 .hidden {
   display: none;
