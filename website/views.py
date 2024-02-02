@@ -1,11 +1,12 @@
-from email import message
-from turtle import st
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from django.db.models import F, ExpressionWrapper, fields
+from django.db.models import Q
+from django.http import JsonResponse
 from django.contrib.auth.models import Permission
 from django.contrib.auth import login, logout, authenticate
 from django.contrib import messages
-from .models import Book, Users, Magazine, File
+from .models import Book, Users, Magazine, File, Notification, Book_Copies, TransactionLog
 from django.utils import timezone
 from django.http import HttpResponse, JsonResponse
 # from .forms import Login
@@ -18,9 +19,32 @@ from email.message import EmailMessage
 from django.contrib.auth.decorators import permission_required
 from .decorators import group_required
 from django.contrib.auth.models import Group
+from .serializers import UsersSerializer
+from django.core.paginator import Paginator
 
 
+def calculate_days(date1, date2):
+    if date1 is None or date2 is None:
+        raise ValueError("Both date1 and date2 must be valid dates")
+    delta = date2() - date1
+    return delta.days
 
+
+def nearest_date(isbn):
+    current_date = date.today()
+
+    # Query the database to get all books with the same ISBN and calculate the difference with the current date
+    books = Book.objects.filter(isbn=isbn).annotate(
+        ret_date_difference=ExpressionWrapper(
+            F('ret_date') - current_date,
+            output_field=fields.DurationField()
+        )
+    )
+
+    # Get the book with the smallest ret_date difference
+    nearest_ret_date_book = books.order_by('ret_date_difference').first()
+    print(nearest_ret_date_book)
+    return nearest_ret_date_book.ret_date
 
 
 def login_user(request):
@@ -33,24 +57,25 @@ def login_user(request):
             if user.user_type == 1:
                 return redirect('librarian')
             elif user.user_type == 2:
-                return redirect('staff_dashboard', id=user.id)
+                return redirect('staff_dashboard', id=user.id_number)
             else:
-                return redirect('student', usn_id=user.id_number)
+                return redirect('student', id=user.id_number)
         else:
             messages.error(request, 'Invalid credentials')
             return redirect('login_user')        
     return render(request, 'login.html', {})
 
 
+"""
 @login_required()
-@group_required('student')
-def student(request, usn_id):
-    u = get_object_or_404(Users, id_number=usn_id)
+@group_required('librarian')
+def get_user_details(request, id):
+    u = Users.objects.get(id_number=id)
     issued_books = u.issued_book.all()  # Retrieve the issued books for the user
     book_list = []
     for book in issued_books:
         book_list.append({
-            'id': book.id,
+            'id': book.access_code,
             'name': book.name,
             'isbn': book.isbn,
             'edition': book.edition,
@@ -66,17 +91,45 @@ def student(request, usn_id):
         'fine': u.fine,
         'issued': book_list,
     }
-    messages.success(request, 'you have logged in...')
+    return JsonResponse(context)
+"""
+
+
+@login_required()
+@group_required('student')
+def student(request, id):
+    u = get_object_or_404(Users, id_number=id)
+    issued_books = u.issued_book.all()  # Retrieve the issued books for the user
+    book_list = []
+    for book in issued_books:
+        book_list.append({
+             'id': book.access_code,
+                'name': book.name,
+                'isbn': book.isbn,
+                'edition': book.edition,
+                'author': book.author,
+                'issue_date': book.issue_date,
+                'available_on': book.ret_date,
+        })
+    context = {
+            'name': u.name,
+            'phone': u.phone,
+            'usn': u.id_number,
+            'email': u.email,
+            'fine': u.fine,
+            'issued': book_list,
+        }
     return render(request, 'user.html', context)
+
 
 @login_required()
 @group_required('staff')
 def staff_about(request, id):
-    u = get_object_or_404(Users, id=id)
+    u = get_object_or_404(Users, id_number=id)
     context = {
         'name': u.name,
         'phone': u.phone,
-        'staff_id': u.id_number,
+        'usn': u.id_number,
         'email': u.email,
         'fine': u.fine,
         'issued': u.issued_book,
@@ -94,22 +147,49 @@ def librarian(request):
 @login_required()
 @permission_required('librarian')
 def lib_book(request):
-    obj = Book.objects.all()
-    lis = []
-    for i in obj:
-        lis.append({
-            'id': i.id,
-            'name': i.name,
-            'isbn': i.isbn,
-            'edition': i.edition,
-            'author': i.author,
-            'copies': i.copies,
-            'reference': i.reference,
-            'issue_date': i.issue_date,
-            'available_on': i.ret_date,
-        })
-    print(lis)
-    return render(request, "lib_book.html", {'list': lis})
+    total = Book.objects.all().count()
+    issued_total = Book.objects.filter(status='issued').count()
+    if request.method == 'POST':
+        query = request.POST.get('query')
+        results = Book.objects.filter(Q(name__icontains=query) | Q(isbn__icontains=query) | Q(access_code__icontains=query))
+        paginator = Paginator(results, 10)
+        page_number = request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+        lis = []
+        for i in results:
+            lis.append({
+                'id': i.access_code,
+                'name': i.name,
+                'isbn': i.isbn,
+                'status': i.status,
+                'edition': i.edition,
+                'author': i.author,
+                'copies': [copy.available_copies for copy in i.copies.all()],
+                'reference': i.reference,
+                'issue_date': i.issue_date,
+                'available_on': nearest_date(i.isbn),
+            })
+        return render(request, 'lib_book.html', {'list': lis, 'page_obj': page_obj, 'total': total, 'issued': issued_total})
+    else:
+        obj = Book.objects.order_by('isbn', 'name').distinct('isbn')  # use progresql for distinct('isbn')
+        paginator = Paginator(obj, 10)
+        page_number = request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+        lis = []
+        for i in obj:
+            lis.append({
+                'id': i.access_code,
+                'name': i.name,
+                'isbn': i.isbn,
+                'edition': i.edition,
+                'author': i.author,
+                'copies': [copy.available_copies for copy in i.copies.all()],
+                'reference': i.reference,
+                'issue_date': i.issue_date,
+                'available_on': nearest_date(i.isbn),
+            })
+        print(lis)
+        return render(request, "lib_book.html", {'list': lis, 'page_obj': page_obj, 'total': total, 'issued': issued_total})
 
 
 @login_required()
@@ -130,72 +210,143 @@ def lib_mag(request):
     return render(request, "lib_mag.html", {'list': lis})
 
 
+# depreciated function
+"""
 @login_required()
 @permission_required('librarian')
 def lib_staff(request):
-    obj = Users.objects.filter(user_type=2)
     lis = []
-    for i in obj:
-        if i.issued_book.all():
-            for book in i.issued_book.all():
+    if request.method == 'POST':
+        query = request.POST.get('query')
+        results = Users.objects.filter(id_number__icontains=query)
+        for i in results:
+            if i.issued_book.all():
+                for book in i.issued_book.all():
+                    lis.append({
+                        'id': i.id_number,
+                        'name': i.name,
+                        'staff_id': i.id_number,
+                        'email': i.email,
+                        'phone': i.phone,
+                        'fine': i.fine,
+                        'issued_book': book,
+                        'ret_date': book.ret_date,
+                        #'issued_reference': i.issued_reference,
+                        })
+            else:
                 lis.append({
-            'id': i.id,
-            'name': i.name,
-            'staff_id': i.id_number,
-            'email': i.email, 
-            'phone': i.phone,
-            'fine': i.fine,
-            'issued_book': book,
-            'ret_date': book.ret_date,
-            #'issued_reference': i.issued_reference,
-            })
-        else:
-            lis.append({
-                'id': i.id,
-                'name': i.name,
-                'staff_id': i.id_number,
-                'email': i.email,
-                'phone': i.phone,
-                'fine': i.fine,
-                'issued_book': None,
-            })
+                    'id': i.id_number,
+                    'name': i.name,
+                    'staff_id': i.id_number,
+                    'email': i.email,
+                    'phone': i.phone,
+                    'fine': i.fine,
+                    'issued_book': None,
+                })
+        return render(request, 'lib_staff.html', {'results': lis})
+    else:
+        obj = Users.objects.filter(user_type=2)
+        for i in obj:
+            if i.issued_book.all():
+                for book in i.issued_book.all():
+                    lis.append({
+                        'id': i.id_number,
+                        'name': i.name,
+                        'staff_id': i.id_number,
+                        'email': i.email,
+                        'phone': i.phone,
+                        'fine': i.fine,
+                        'issued_book': book,
+                        'ret_date': book.ret_date,
+                        #'issued_reference': i.issued_reference,
+                        })
+            else:
+                lis.append({
+                    'id': i.id_number,
+                    'name': i.name,
+                    'staff_id': i.id_number,
+                    'email': i.email,
+                    'phone': i.phone,
+                    'fine': i.fine,
+                    'issued_book': None,
+                })
     print(lis)
     return render(request, "lib_staff.html", {'list': lis})
+"""
 
 
 @login_required()
 @permission_required('librarian')
 def lib_student(request):
-    obj = Users.objects.filter(user_type=3)
     lis = []
-    for i in obj:
-        if i.issued_book.all():
-            for book in i.issued_book.all():
+    total = Users.objects.all().count() -1
+    if request.method == 'POST':
+        query = request.POST.get('query')
+        results = Users.objects.filter(Q(id_number__icontains=query) | Q(name__icontains=query))
+        paginator = Paginator(results, 10)
+        page_number = request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+        for i in results:
+            if i.issued_book.all():
+                ret_dates = [f"book-{index+1}: " + book.ret_date.strftime('%d-%m-%Y') for index, book in enumerate(i.issued_book.all())]
+                book = ["book: " + book.name + " | " + "code: " + str(book.access_code) for book in i.issued_book.all()]
                 lis.append({
-                    'id': i.id,
+                    'id': i.id_number,
                     'name': i.name,
                     'usn': i.id_number,
                     'email': i.email,
                     'phone': i.phone,
                     'fine': i.fine,
                     'issued_book': book,
-                    'ret_date': book.ret_date,
-
-                    #'issued_reference': i.issued_Reference,
+                    'ret_date': ret_dates,
+                    # 'issued_reference': i.issued_Reference,
                 })
-        else:
-            lis.append({
-                'id': i.id,
-                'name': i.name,
-                'usn': i.id_number,
-                'email': i.email,
-                'phone': i.phone,
-                'fine': i.fine,
-                'issued_book': None,
+            else:
+                lis.append({
+                    'id': i.id_number,
+                    'name': i.name,
+                    'usn': i.id_number,
+                    'email': i.email,
+                    'phone': i.phone,
+                    'fine': i.fine,
+                    'issued_book': None,
+                    })
+        return render(request, 'lib_user.html', {'results': lis, 'page_obj': page_obj, 'total': total})
+    
+    else:
+        obj = Users.objects.filter(Q(user_type=3) | Q(user_type=2))
+        paginator = Paginator(obj, 10)
+        page_number = request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+        for i in obj:
+            if i.issued_book.all():
+                ret_dates = [f"book-{index + 1}: " + book.ret_date.strftime('%d-%m-%Y') + " | " for index, book in enumerate(i.issued_book.all())]
+                book = [f"book-{index+1}: " + book.name + " | " + "code: " + str(book.access_code) for index, book in enumerate(i.issued_book.all())]
+                lis.append({
+                    'id': i.id_number,
+                    'name': i.name,
+                    'usn': i.id_number,
+                    'email': i.email,
+                    'phone': i.phone,
+                    'fine': i.fine,
+                    'issued_book': book,
+                    'ret_date': ret_dates,
+                    # 'issued_reference': i.issued_Reference,
                 })
 
+            else:
+                lis.append({
+                    'id': i.id_number,
+                    'name': i.name,
+                    'usn': i.id_number,
+                    'email': i.email,
+                    'phone': i.phone,
+                    'fine': i.fine,
+                    'issued_book': None,
+                    })
+    
     print(lis)
-    return render(request, "lib_student.html", {'list': lis})
+    return render(request, "lib_user.html", {'list': lis, 'page_obj': page_obj, 'total': total})
 
 
 @login_required()
@@ -231,80 +382,91 @@ def lib_auto(request):
 def lib_issue(request):
     if request.method == 'POST':
         id = request.POST.get('id')
-        isbn = request.POST.get('isbn')
+        access_code = request.POST.get('access_code')
         ret = request.POST.get('return_date')
 
-        print(id, isbn)
-        book = Book.objects.filter(isbn=isbn).first()
+        print(id, access_code)
+        book = Book.objects.filter(access_code=access_code).first()
+        book_copy = Book_Copies.objects.get(book=book)
         user = Users.objects.filter(id_number=id).first()
-        if user and book:
-            if user.user_type == 3:      
-                if Book.objects.filter(issue_to=user.id_number, isbn=isbn).exists():
+        if user and book and book_copy:
+            if user.user_type == 3:
+                if book.status == 'issued':
+                    messages.error(request, 'Book already issued')
+                    return redirect('lib_issue')
+                if Book.objects.filter(issue_to=user, access_code=access_code).exists():
                     messages.error(request, 'This book is already issued to the student')
                     return redirect('lib_issue')
                 if user.issued_book.all().count() >= 3:
                     messages.error(request, 'You can issue only 2 books')
                     return redirect('lib_issue')
-                if book.copies == 0:
+                if book_copy.available_copies == 0:
                     messages.error(request, 'Book not available')
                     return redirect('lib_issue')
-                
-                if user.fine == 0:
-                    user.issued_book.add(book)
-                else:
-                    messages.error(request, 'You have fine of Rs.'+str(user.fine))
-                    return redirect('lib_issue') 
-                if ret:
-                    book.ret_date = ret
-                else:
-                    book.ret_date = date.today() + timedelta(days=15)
-                book.issue_to = str(user.id_number)
-                book.issue_date = date.today()
-                book.copies -= 1
-                user.save()
-                book.save()
-                context = {
-                        'name': user.name,
-                        'book': book.name,
-                        'issue_date': book.issue_date,
-                        'return_date': book.ret_date,
-                        }
-                messages.success(request, 'Book issued successfully')
-                return render(request, 'lib_issue.html', context)
+                if book.status == 'available':
+                    if user.fine == 0:
+                        user.issued_book.add(book)
+                    else:
+                        messages.error(request, 'You have fine of Rs.'+str(user.fine))
+                        return redirect('lib_issue')
+                    if ret:
+                        book.ret_date = ret
+                    else:
+                        book.ret_date = date.today() + timedelta(days=15)
+                    book.issue_to = user
+                    book.issue_date = date.today()
+                    book.status = 'issued'
+                    TransactionLog.objects.create(user=user, transaction_type=f'issue of book:{book.access_code}')
+                    #book.copies -= 1
+                    user.save()
+                    book.save()
+                    context = {
+                            'name': user.name,
+                            'book': book.name,
+                            'issue_date': book.issue_date,
+                            'return_date': book.ret_date,
+                            }
+                    messages.success(request, 'Book issued successfully')
+                    return render(request, 'lib_issue.html', context)
             
             if user.user_type == 2:
-                if user.issued_book.filter(isbn=isbn).exists():
+                if book.status == 'issued':
+                    messages.error(request, 'Book already issued')
+                    return redirect('lib_issue')
+                if user.issued_book.filter(access_code=access_code).exists():
                     messages.error(request, 'This book is already issued to the staff')
                     return redirect('lib_issue')
                 if user.issued_book.count() >= 5:
                     messages.error(request, 'You can issue only 5 books')
                     return redirect('lib_issue')
-                if book and book.copies == 0:
+                if book and book_copy.available_copies == 0:
                     messages.error(request, 'Book not available')
                     return redirect('lib_issue')
-                
-                if user.fine > 0:
-                    messages.error(request, 'You have fine of Rs.'+str(user.fine))
-                    return redirect('lib_issue')
-                else:
-                    user.issued_book.add(book)
-                    if ret:
-                        book.ret_date = ret
+
+                if book.status == 'available':
+                    if user.fine > 0:
+                        messages.error(request, 'You have fine of Rs.'+str(user.fine))
+                        return redirect('lib_issue')
                     else:
-                        book.ret_date = date.today() + timedelta(days=60)
-                    book.issue_date = date.today()
-                    book.issue_to = str(user.id_number)
-                    book.copies -= 1
-                    user.save()
-                    book.save()
-                    context = {
-                        'name': user.name,
-                        'book': book.name,
-                        'issue_date': book.issue_date,
-                        'return_date': book.ret_date,
-                    }
-                    messages.success(request, 'Book issued successfully')
-                    return render(request, 'lib_issue.html', context)
+                        user.issued_book.add(book)
+                        if ret:
+                            book.ret_date = ret
+                        else:
+                            book.ret_date = date.today() + timedelta(days=60)
+                        book.issue_date = date.today()
+                        book.issue_to = user
+                        # book.copies -= 1
+                        user.save()
+                        book.save()
+                        context = {
+                            'name': user.name,
+                            'book': book.name,
+                            'issue_date': book.issue_date,
+                            'return_date': book.ret_date,
+                        }
+                        TransactionLog.objects.create(user=user, transaction_type=f'issue of book:{book.access_code}')
+                        messages.success(request, 'Book issued successfully')
+                        return render(request, 'lib_issue.html', context)
         else:
             messages.error(request, 'Invalid ID')
             return redirect('lib_issue')
@@ -316,12 +478,22 @@ def lib_issue(request):
 def lib_return(request):
     if request.method == 'POST':
         id = request.POST.get('id')
-        isbn = request.POST.get('isbn')
-        print(id, isbn)
-        book = Book.objects.filter(isbn=isbn).first()
-        user = Users.objects.filter(id_number=id).first()
-        if user and book:
-            if user.issued_book.filter(isbn=isbn).exists():
+        access_code = request.POST.get('access_code')
+        print(id, access_code)
+        book = Book.objects.get(access_code=access_code)
+        book_copy = Book_Copies.objects.get(book=book)
+        user = Users.objects.get(id_number=id)
+        prev_issue_date = book.issue_date
+        prev_return_date = book.ret_date
+        if user and book and book_copy:
+            if user.issued_book.filter(access_code=access_code).exists():
+                issue_date = book.issue_date
+                return_date = date.today
+                days = calculate_days(issue_date, return_date)
+                if user.user_type == '3' and days > 15:
+                    user.fine += (days - 15) * 5
+                elif user.user_type == '2' and days > 60:
+                    user.fine += (days - 60) * 5
                 user.save()
                 if user.fine > 0:
                     messages.error(request, 'You have fine of Rs.'+str(user.fine))
@@ -330,15 +502,17 @@ def lib_return(request):
                 book.issue_to = None
                 book.issue_date = None
                 book.ret_date = None
-                book.copies += 1
+                book.status = 'available'
+                TransactionLog.objects.create(user=user, transaction_type=f'return of book:{book.access_code}')
+                # book.copies += 1
                 user.save()
                 book.save()
                 context = {
-                'name': user.name,
-                'book': book.name,
-                'issue_date': book.issue_date,
-                'return_date': book.ret_date,
-                'fine': user.fine,
+                    'name': user.name,
+                    'book': book.name,
+                    'issue_date': prev_issue_date,
+                    'return_date': prev_return_date,
+                    'fine': user.fine,
                 }
                 messages.success(request, 'Book returned successfully')
                 return render(request, 'lib_return.html', context)
@@ -370,6 +544,7 @@ def repay_due(request):
                     messages.error(request, 'Invalid amount')
                     return redirect('repay_due')
 
+                TransactionLog.objects.create(user=user, amount=amount, transaction_type='payment amount: ' + str(amount))
                 context = {
                     'name': user.name,
                     'fine': user.fine,
@@ -388,7 +563,7 @@ def repay_due(request):
 @login_required()
 @permission_required('librarian')
 def edit_book(request, book_id):
-    book = get_object_or_404(Book, id=book_id)
+    book = get_object_or_404(Book, access_code=book_id)
     if request.method == "POST":
         form = BookForm(request.POST, instance=book)
         if form.is_valid():
@@ -436,7 +611,7 @@ def edit_reference(request, reference_id):
 @login_required()
 @permission_required('librarian')
 def edit_student(request, id):
-    student = get_object_or_404(Users, id=id)
+    student = get_object_or_404(Users, id_number=id)
     if request.method == "POST":
         form = UserForm(request.POST, instance=student)
         if form.is_valid():
@@ -454,7 +629,7 @@ def edit_student(request, id):
 @login_required()
 @permission_required('librarian')
 def edit_staff(request, id):
-    staff = get_object_or_404(Users, id=id)
+    staff = get_object_or_404(Users, id_number=id)
     if request.method == "POST":
         form = UserForm(request.POST, instance=staff)
         if form.is_valid():
@@ -477,19 +652,23 @@ def books(request, name=None):
     if user.user_type not in [2, 3]:  # 2 and 3 are the user types for staff and student
         messages.error(request, 'You do not have permission to access this page.')
         return redirect('login_user')
-    obj = Book.objects.all()
-    lis = []
-    for i in obj:
-        lis.append({
-            'name': i.name,
-            'isbn': i.isbn,
-            'copies': i.copies,
-            'edition': i.edition,
-            'author': i.author,
-            'available_on': i.ret_date,
-        })
-    print(lis)
-    return render(request, "book.html", {'list': lis})
+    if request.method == 'POST':
+        query = request.POST.get('query')
+        results = Book.objects.filter(Q(name__icontains=query) | Q(author__icontains=query) | Q(isbn__icontains=query) | Q(access_code__icontains=query))
+        lis = []
+        for i in results:
+            lis.append({
+                'name': i.name,
+                'isbn': i.isbn,
+                'copies': [copy.available_copies for copy in i.copies.all()],
+                'edition': i.edition,
+                'reference': i.reference,
+                'author': i.author,
+                'available_on': nearest_date(i.isbn),
+            })
+        return render(request, 'book.html', {'list': lis})
+    else:
+        return render(request, "book.html", {})
 
 
 """
@@ -553,16 +732,22 @@ def add_book(request):
         isbn = request.POST.get('isbn')
         author = request.POST.get('author')
         copies = request.POST.get('copies')
-        reference = request.POST.get('reference', False)
+        reference = True if request.POST.get('reference') == 'on' else False
         edition = request.POST.get('edition')
         category = request.POST.get('category')
+        cost = request.POST.get('price')
+        year = request.POST.get('year')
+        publisher = request.POST.get('publisher')
+        access_code = request.POST.get('code')
         if name and isbn and author and copies and category:
-            if Book.objects.filter(isbn=isbn).exists():
+            if Book.objects.filter(access_code=access_code).exists():
                 messages.error(request, 'Book already exists')
                 return redirect('add_book')
             else:
-                book = Book(name=name, isbn=isbn, author=author, copies=copies, category=category, edition=edition, reference=reference)
-                book.save()
+                for _ in range(int(copies)):
+                    access_codes = int(access_code) + int(_)
+                    book = Book(name=name, isbn=isbn, author=author, category=category, edition=edition, reference=reference, cost=cost, pub_year=year, publisher=publisher, access_code=access_codes)
+                    book.save()
                 messages.success(request, 'Book added successfully')
                 return redirect('add_book')
         return render(request, 'add_book.html', {})
@@ -602,13 +787,26 @@ def add_staff(request):
         email = request.POST.get('email')
         phone = request.POST.get('phone')
         password = request.POST.get('password')
+        if 'photo' in request.FILES:
+            photo = request.FILES['photo']
+        else:
+            photo = None
         if name and staff_id and email and phone and password:
-            if Users.objects.filter(username=staff_id).exists():
+            if Users.objects.filter(id_number=staff_id).exists():
                 messages.error(request, 'Staff already exists')
                 return redirect('add_staff')
             else:
-                user = Users.objects.create_user(username=staff_id, id_number=staff_id, email=email, password=password, name=name, phone=phone, user_type=2)
-                staff_group = Group.objects.get(name='staff')
+                if photo:
+                    fs = FileSystemStorage()
+                    pic_name = fs.save(photo.name, photo)
+                    url = fs.url(pic_name)
+                    user = Users.objects.create_user(username=staff_id, id_number=staff_id, email=email, password=password, name=name, phone=phone, user_type=2, photo=url)
+                else:
+                    user = Users.objects.create_user(username=staff_id, id_number=staff_id, email=email, password=password, name=name, phone=phone, user_type=2, photo=None)
+
+                staff_group, created = Group.objects.get_or_create(name='staff')
+                if created:
+                    print("staff group created")
                 staff_group.user_set.add(user)
                 user.save()
                 messages.success(request, 'Staff added successfully')
@@ -616,7 +814,8 @@ def add_staff(request):
         return render(request, 'add_staff.html', {})
     else:
         return render(request, 'add_staff.html', {})
-    
+
+
 @login_required()
 @permission_required('librarian')
 def add_student(request):
@@ -626,13 +825,25 @@ def add_student(request):
         email = request.POST.get('email')
         phone = request.POST.get('phone')
         password = request.POST.get('password')
+        if 'photo' in request.FILES:
+            photo = request.FILES['photo']
+        else:
+            photo = None
         if name and usn and email and phone and password:
             if Users.objects.filter(username=usn).exists():
                 messages.error(request, 'Student already exists')
                 return redirect('add_student')
             else:
-                user = Users.objects.create_user(username=usn, id_number=usn, email=email, password=password, name=name, phone=phone, user_type=3)
-                student_group = Group.objects.get(name='student')    
+                if photo:
+                    fs = FileSystemStorage()
+                    pic_name = fs.save(photo.name, photo)
+                    url = fs.url(pic_name)
+                    user = Users.objects.create_user(username=usn, id_number=usn, email=email, password=password, name=name, phone=phone, user_type=3, photo=url)
+                else:
+                    user = Users.objects.create_user(username=usn, id_number=usn, email=email, password=password, name=name, phone=phone, user_type=3, photo=None)
+                student_group, created = Group.objects.get_or_create(name='student')
+                if created:
+                    print("student group created")
                 student_group.user_set.add(user)
                 user.save()
                 messages.success(request, 'Student added successfully')
@@ -640,23 +851,6 @@ def add_student(request):
         return render(request, 'add_student.html', {})
     else:
         return render(request, 'add_student.html', {})
-
-"""
-@login_required()
-@permission_required('librarian')   
-def add_reference(request):
-    print(request.user)
-    form = addReference(request.POST)
-    if form.is_valid():
-        form.save()
-    context = {
-        'form': form
-    }
-    return render(request, 'add_reference.html', context)
-
-def home(request):
-    return render(request, 'home.html', {})
-"""
 
 
 def rules(request, id=None):
@@ -672,6 +866,28 @@ def rules(request, id=None):
 
 def secret(request):
     return render(request, 'secret.html', {})
+
+
+@login_required()
+@group_required('librarian')
+def searchstu(request, query):
+    results = Users.objects.filter(id_number__icontains=query)
+    return render(request, 'search.html', {'results': results})
+
+
+@login_required()
+@group_required('librarian')
+def searchstaff(request, query):
+    results = Users.objects.filter(id_number__icontains=query)
+    return render(request, 'lib_student.html', {'results': results})
+
+
+@login_required()
+@group_required('librarian')
+def searchbook(request, query):
+    results = Book.objects.filter(name__icontains=query)
+    return render(request, 'search.html', {'results': results})
+
 
 @login_required()
 @group_required('student', 'staff')
@@ -713,7 +929,7 @@ def logout_user(request):
 @login_required()
 @group_required('staff')
 def staff_dashboard(request, id):
-    user = Users.objects.get(id=id)
+    user = Users.objects.get(id_number=id)
     context = {
         'user': user,
     }
@@ -750,24 +966,24 @@ def files_delete(request, id):
 @group_required('staff')
 def staff_files(request, id):
     if request.method == 'POST':
-            file = request.FILES['document']
-            title = request.POST.get('title')
-            description = request.POST.get('desp')
-            print(title, description, file)
-            fs = FileSystemStorage()
-            name = fs.save(file.name, file)
-            url = fs.url(name)
-            user = Users.objects.get(id=id)
-            new_file = File(file=url, title=title, description=description, user=user, user_num=id)
-            new_file.save()
-            messages.success(request, 'File uploaded successfully')
-            return redirect('staff_files', id=id)
-    obj = File.objects.filter(user_num=id)
-    user = Users.objects.get(id=id)
+        file = request.FILES['document']
+        title = request.POST.get('title')
+        description = request.POST.get('desp')
+        print(title, description, file)
+        fs = FileSystemStorage()
+        name = fs.save(file.name, file)
+        url = fs.url(name)
+        user = Users.objects.get(id_number=id)
+        new_file = File(file=url, title=title, description=description, user=user)
+        new_file.save()
+        messages.success(request, 'File uploaded successfully')
+        return redirect('staff_files', id=id)
+    obj = File.objects.filter(user=id)
+    user = Users.objects.get(id_number=id)
     lis = []
     for i in obj:
         lis.append({
-            'id': id,
+            'id': user.id_number,
             'from': user.name,
             'title': i.title,
             'description': i.description,
@@ -779,6 +995,18 @@ def staff_files(request, id):
 @login_required()
 @permission_required('librarian')
 def lib_files(request):
+    if request.method == 'POST':
+        file = request.FILES['document']
+        title = request.POST.get('title')
+        description = request.POST.get('desp')
+        print(title, description, file)
+        fs = FileSystemStorage()
+        name = fs.save(file.name, file)
+        url = fs.url(name)
+        new_file = File(file=url, title=title, description=description, user=request.user)
+        new_file.save()
+        messages.success(request, 'File uploaded successfully')
+        return redirect('lib_files')
     obj = File.objects.all()
     lis = []
     for i in obj:
@@ -787,10 +1015,12 @@ def lib_files(request):
             'title': i.title,
             'description': i.description,
             'file': i.file,
+            'from': i.user.name,
             'date': i.date_uploaded,
         })
     print(lis)
     return render(request, "lib_files.html", {'list': lis})
+
 
 @login_required()
 @permission_required('librarian')
@@ -798,4 +1028,81 @@ def lib_files_delete(request, id):
     obj = File.objects.get(id=id)
     obj.delete()
     return redirect('lib_files')
-    
+
+
+@login_required()
+def notification(request):
+    obj = Notification.objects.all()
+    lis = []
+    for i in obj:
+        lis.append({
+            'title': i.title,
+            'content': i.content,
+            'file': i.file_notification.file if i.file_notification else None,
+            'date': i.date_uploaded,
+        })
+    print(lis)
+    return render(request, "notification.html", {'list': lis})
+
+
+@login_required()
+@permission_required('librarian')
+def lib_notification(request):
+    obj = Notification.objects.all()
+    lis = []
+    if request.method == 'POST':
+        title = request.POST.get('title')
+        content = request.POST.get('content')
+        file = request.FILES['document'] if request.FILES else None
+        if title and content:
+            new_notification = Notification(title=title, content=content)
+            if file is not None:
+                fs = FileSystemStorage()
+                name = fs.save(file.name, file)
+                url = fs.url(name)
+                new_notification.file_notification.file = url
+                new_notification.file_notification.title = title
+                new_notification.file_notification.description = content
+                new_notification.file_notification.user = request.user.username
+
+            new_notification.save()
+
+            messages.success(request, 'Notification added successfully')
+            return redirect('lib_notification')
+        else:
+            messages.error(request, 'Invalid details')
+            return redirect('lib_notification')
+    for i in obj:
+        lis.append({
+            'id': i.id,
+            'title': i.title,
+            'from': request.user.username,
+            'content': i.content,
+            'file': i.file_notification.file if i.file_notification else None,
+            'date': i.date_uploaded,
+        })
+    print(lis)
+    return render(request, "lib_notification.html", {'list': lis})
+
+@login_required()
+@permission_required('librarian')
+def transaction_logs(request):
+    transaction_logs = TransactionLog.objects.all().order_by('-transaction_date')
+    return render(request, 'transaction_logs.html', {'transaction_logs': transaction_logs})
+
+
+def get_user_details(request, id):
+    user = Users.objects.get(id_number=id)
+    if request.method == 'GET':
+        serializer = UsersSerializer(user)
+        return JsonResponse(serializer.data)
+
+
+#todo- add clubs
+
+
+#todo - add blogs in techclub
+#todo - add events in techclub
+#todo - add projects in techclub
+#todo - add pagination
+
