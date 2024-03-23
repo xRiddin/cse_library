@@ -168,7 +168,7 @@ def lib_book(request):
                 'available': [copy.available_copies for copy in i.copies.all()],
                 'reference': i.reference,
                 'issue_date': i.issue_date,
-                'available_on': nearest_date(i.isbn),
+                'available_on': i.ret_date,
             })
         return render(request, 'lib_book.html', {'list': lis, 'page_obj': page_obj, 'total': total, 'issued': issued_total})
     else:
@@ -189,7 +189,7 @@ def lib_book(request):
                 'available': [copy.available_copies for copy in i.copies.all()],
                 'reference': i.reference,
                 'issue_date': i.issue_date,
-                'available_on': nearest_date(i.isbn),
+                'available_on': i.ret_date,
             })
         print(lis)
         return render(request, "lib_book.html", {'list': lis, 'page_obj': page_obj, 'total': total, 'issued': issued_total})
@@ -202,7 +202,7 @@ def lib_mag(request):
     lis = []
     for i in obj:
         lis.append({
-            'id': i.id,
+            'id': i.access_code,
             'name': i.name,
             'isbn': i.isbn,
             'author': i.author,
@@ -401,7 +401,7 @@ def lib_issue(request):
                     messages.error(request, 'This book is already issued to the student')
                     return redirect('lib_issue')
                 if user.issued_book.all().count() >= 3:
-                    messages.error(request, 'You can issue only 2 books')
+                    messages.error(request, 'User can issue only 3 books')
                     return redirect('lib_issue')
                 if book_copy.available_copies == 0:
                     messages.error(request, 'Book not available')
@@ -410,7 +410,7 @@ def lib_issue(request):
                     if user.fine == 0:
                         user.issued_book.add(book)
                     else:
-                        messages.error(request, 'You have fine of Rs.'+str(user.fine))
+                        messages.error(request, 'User has fine of Rs.'+str(user.fine))
                         return redirect('lib_issue')
                     if ret:
                         book.ret_date = ret
@@ -440,7 +440,7 @@ def lib_issue(request):
                     messages.error(request, 'This book is already issued to the staff')
                     return redirect('lib_issue')
                 if user.issued_book.count() >= 5:
-                    messages.error(request, 'You can issue only 5 books')
+                    messages.error(request, 'User can issue only 5 books')
                     return redirect('lib_issue')
                 if book and book_copy.available_copies == 0:
                     messages.error(request, 'Book not available')
@@ -458,6 +458,8 @@ def lib_issue(request):
                             book.ret_date = date.today() + timedelta(days=60)
                         book.issue_date = date.today()
                         book.issue_to = user
+                        book.status = 'issued'
+
                         # book.copies -= 1
                         user.save()
                         book.save()
@@ -670,30 +672,11 @@ def books(request, name=None):
                 'edition': i.edition,
                 'reference': i.reference,
                 'author': i.author,
-                'available_on': nearest_date(i.isbn),
+                'available_on': i.ret_date,
             })
         return render(request, 'book.html', {'list': lis})
     else:
         return render(request, "book.html", {})
-
-
-"""
-@login_required()
-@permission_required('view_magazine')
-def reference(request):
-    obj = Reference.objects.all()
-    lis = []
-    for i in obj:
-        lis.append({
-            'name': i.name,
-            'isbn': i.isbn,
-            'copies': i.copies,
-            'edition': i.edition,
-            'author': i.author,
-        })
-    print(lis)
-    return render(request, "reference.html", {'list': lis})
-"""
 
 
 @login_required()
@@ -716,18 +699,6 @@ def mag(request):
     print(lis)
     return render(request, "mag.html", {'list': lis})
 
-"""
-@login_required()
-def createuser(request):
-    print(request.user)
-    form = addStudent(request.POST)
-    if form.is_valid():
-        form.save()
-    context = {
-        'form': form
-    }
-    return render(request, 'createuser.html', context)
-"""
 
 @login_required()
 @permission_required('librarian')
@@ -759,6 +730,7 @@ def add_book(request):
         return render(request, 'add_book.html', {})
     else:
         return render(request, 'add_book.html', {})
+
 
 @login_required()
 @permission_required('librarian')
@@ -963,6 +935,7 @@ def files(request):
         })
     print(lis)
     return render(request, "files.html", {'list': lis})
+
 
 @login_required()
 @group_required('staff')

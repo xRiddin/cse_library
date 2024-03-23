@@ -1,9 +1,9 @@
 from django.contrib import admin
-# from .models import Student, Book, Staff, Reference, Magazine
+from .models import Users, Book, TransactionLog, Magazine, File, Notification, Message, Book_Copies
 # from .forms import BookAdminForm
 
-"""
 
+"""
 class StudAdmin(admin.ModelAdmin):
 
     def issued_Books(self, obj):
@@ -30,6 +30,7 @@ class StudAdmin(admin.ModelAdmin):
 class BookAdmin(admin.ModelAdmin):
     search_fields = ('name', 'isbn',)
     list_display = ('name',
+                    'access_code'
                     'isbn',
                     'copies',
                     'author',
@@ -41,10 +42,10 @@ class BookAdmin(admin.ModelAdmin):
                     )
     
     raw_id_fields = ('issue_to',)
-
+    
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == 'issue_to':
-            kwargs['queryset'] = Student.objects.filter(issue=False)
+            kwargs['queryset'] = .objects.filter(issue=False)
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
     
     # form = BookAdminForm
@@ -71,16 +72,45 @@ class StaffAdmin(admin.ModelAdmin):
         return super().formfield_for_manytomany(db_field, request, **kwargs)
 
 
-#class ReferenceAdmin(admin.ModelAdmin):
-#    search_fields = ('name', 'author', 'isbn')
-#    list_display = ('name', 'isbn', 'copies', 'author', 'available', 'issue_to', )
+class bookcopyadmin(admin.ModelAdmin):
+    list_display = ('book', 'total_copies', 'available_copies', 'issued_copies', )
 
-
-# Register your models here.
-admin.site.register(Student, StudAdmin)
-admin.site.register(Book, BookAdmin)
-admin.site.register(Reference)
-admin.site.register(Magazine)
-admin.site.register(Staff, StaffAdmin)
-
+class Messageadmin(admin.ModelAdmin):
 """
+
+class StudAdmin(admin.ModelAdmin):
+    def issued_book(self, obj):
+        return ", ".join([str(book) for book in obj.issued_book.all()])
+    list_display = ['name', 'id_number', 'email', 'issued_book', 'fine', 'phone',]
+
+class BookAdmin(admin.ModelAdmin):
+    list_display = [ 'name', 'isbn', 'access_code', 'author', 'edition', 'issue_to', 'cost',  'issue_date', 'ret_date', 'status', 'course']
+
+class bookcopyadmin(admin.ModelAdmin):
+    list_display = [field.name for field in Book_Copies._meta.get_fields()]
+
+class Messageadmin(admin.ModelAdmin):
+    list_display = [field.name for field in Message._meta.get_fields()]
+
+class FileAdmin(admin.ModelAdmin):
+    list_display = ['file', 'title', 'description', 'date_uploaded', 'user', ]
+
+class Notiadmin(admin.ModelAdmin):
+    list_display = [field.name for field in Notification._meta.get_fields()]
+
+class Transadmin(admin.ModelAdmin):
+    list_display = [field.name for field in TransactionLog._meta.get_fields()]
+
+class Magadmin(admin.ModelAdmin):
+    list_display = [field.name for field in Magazine._meta.get_fields()]
+# Register your models here.
+admin.site.register(Users, StudAdmin)
+admin.site.register(Book, BookAdmin)
+admin.site.register(Book_Copies, bookcopyadmin)
+admin.site.register(Message, Messageadmin)
+admin.site.register(File, FileAdmin)
+admin.site.register(Notification, Notiadmin)
+admin.site.register(TransactionLog, Transadmin )
+admin.site.register(Magazine, Magadmin)
+
+

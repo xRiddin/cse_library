@@ -2,6 +2,12 @@
 {% block content %}
     <h1>Rules</h1>
     <h2> Welcome {{ instance.name }}!</h2>
-    <h3> No Rules</h3>
+    <h3> <ul>
+        <li>Obey the college Rules.</li>
+        <li>Penetration testing is allowed with consent.</li>
+        <li>Do not share your password.</li>
+        <li>Do not share your account.</li>
+
+    </ul></h3>
     <h4> <a href="{% url 'secret' %}">DO Not Click</a></h4>
 {% endblock content %}

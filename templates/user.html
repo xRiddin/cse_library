@@ -29,14 +29,14 @@
         </table>
         <h2> Your Books </h2>
 
-        {% if issued.name is not None %}
+        {% if issued %}
             <div class="issued-book">
                 <table>
-                {% for book in book_list %}
-        <tr><td>Issued Book:</td><td>{{ name }}</td></tr>
-                <tr><td>ISBN: </td><td>{{ isbn }}</td></tr>
-                <tr><td>Issue date: </td><td>{{ issue_date }}</td></tr>
-                <tr><td>Return date: </td><td>{{ ret_date }}</td></tr>
+                {% for book in issued.all %}
+        <tr><td>Issued Book:</td><td>{{ book.name }}</td></tr>
+                <tr><td>ISBN: </td><td>{{ book.isbn }}</td></tr>
+                <tr><td>Issue date: </td><td>{{ book.issue_date }}</td></tr>
+                <tr><td>Return date: </td><td>{{ book.ret_date }}</td></tr>
                 {% endfor %}
         </table>
     {% else %}
