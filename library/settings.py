@@ -41,6 +41,8 @@ INSTALLED_APPS = [
     "website.apps.WebConfig",
     'simple_history',
     'rest_framework',
+    'channels',
+
 ]
 
 REST_FRAMEWORK = {
@@ -97,7 +99,7 @@ DATABASES = {
         'USER': os.getenv('SUPABASE_USER'),
         'PASSWORD': os.getenv('SUPABASE_PASSWORD') ,
         'HOST': os.getenv('SUPABASE_HOST'),
-        'PORT': 6543,
+        'PORT': 5432,
     }
 }
 """
@@ -130,7 +132,6 @@ TIME_ZONE = "UTC"
 USE_I18N = True
 
 USE_TZ = True
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/

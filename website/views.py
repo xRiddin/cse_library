@@ -6,7 +6,7 @@ from django.http import JsonResponse
 from django.contrib.auth.models import Permission
 from django.contrib.auth import login, logout, authenticate
 from django.contrib import messages
-from .models import Book, Users, Magazine, File, Notification, Book_Copies, TransactionLog
+from .models import Book, Users, Magazine, File, Notification, Book_Copies, TransactionLog,Message
 from django.utils import timezone
 from django.http import HttpResponse, JsonResponse
 # from .forms import Login
@@ -164,14 +164,16 @@ def lib_book(request):
                 'status': i.status,
                 'edition': i.edition,
                 'author': i.author,
-                'copies': [copy.available_copies for copy in i.copies.all()],
+                'copies': [copy.total_copies for copy in i.copies.all()],
+                'available': [copy.available_copies for copy in i.copies.all()],
                 'reference': i.reference,
                 'issue_date': i.issue_date,
                 'available_on': nearest_date(i.isbn),
             })
         return render(request, 'lib_book.html', {'list': lis, 'page_obj': page_obj, 'total': total, 'issued': issued_total})
     else:
-        obj = Book.objects.order_by('isbn', 'name').distinct('isbn')  # use progresql for distinct('isbn')
+        obj = Book.objects.order_by('isbn', 'name').annotate()
+        #obj = Book.objects.order_by('isbn', 'name').distinct('isbn')  # use progresql for distinct('isbn')
         paginator = Paginator(obj, 10)
         page_number = request.GET.get('page')
         page_obj = paginator.get_page(page_number)
@@ -183,7 +185,8 @@ def lib_book(request):
                 'isbn': i.isbn,
                 'edition': i.edition,
                 'author': i.author,
-                'copies': [copy.available_copies for copy in i.copies.all()],
+                'copies': [copy.total_copies for copy in i.copies.all()],
+                'available': [copy.available_copies for copy in i.copies.all()],
                 'reference': i.reference,
                 'issue_date': i.issue_date,
                 'available_on': nearest_date(i.isbn),
@@ -487,6 +490,8 @@ def lib_return(request):
         prev_return_date = book.ret_date
         if user and book and book_copy:
             if user.issued_book.filter(access_code=access_code).exists():
+                # depreciated fxn calculate fine when returning
+                """
                 issue_date = book.issue_date
                 return_date = date.today
                 days = calculate_days(issue_date, return_date)
@@ -495,8 +500,9 @@ def lib_return(request):
                 elif user.user_type == '2' and days > 60:
                     user.fine += (days - 60) * 5
                 user.save()
+                """
                 if user.fine > 0:
-                    messages.error(request, 'You have fine of Rs.'+str(user.fine))
+                    messages.error(request, 'Fine of Rs.'+str(user.fine))
                     return redirect('lib_return')
                 user.issued_book.remove(book)
                 book.issue_to = None
@@ -576,7 +582,7 @@ def edit_book(request, book_id):
             return redirect('lib_book')
     else:
         form = BookForm(instance=book)
-    return render(request, 'edit_book.html', {'form': form})
+    return render(request, 'edit_book.html', {'form': form, 'book_id': book_id})
 
 
 @login_required()
@@ -914,6 +920,14 @@ def search(request):
 @login_required()
 @group_required('student', 'staff')
 def contact(request):
+    #todo make a contact us form to send directly to admin
+    if request.POST:
+        subject = request.POST.get('subject')
+        message = request.POST.get('message')
+        sender = request.user
+        new_messsage = Message.objects.create(subject=subject, sender=sender, content=message)
+        new_messsage.save()
+        return render(request, 'thank_you.html', {})
     return render(request, 'contact_us.html', {})
 
 
@@ -1097,12 +1111,79 @@ def get_user_details(request, id):
         serializer = UsersSerializer(user)
         return JsonResponse(serializer.data)
 
+@login_required()
+@permission_required('librarian')
+def delete_book(request, book_id):
+    book = get_object_or_404(Book, access_code=book_id)
+    book.delete()
+    book_duplicate = Book.objects.filter(isbn=book.isbn).first()
+    book_copi = Book_Copies.objects.get(book=book_duplicate)
+    book_copi.total_copies -= 1
+    book_copi.save()
+    book_duplicate.save()
+
+    messages.success(request, 'Book deleted successfully')
+    return redirect('lib_book')
+
+@login_required
+def send_message(request):
+    if request.method == 'POST':
+        content = request.POST.get('content')
+        print(request.user)
+        owner = Users.objects.get(id_number=request.user)  # Replace 'owner' with the actual owner's username
+        Message.objects.create(sender=request.user, owner=owner, content=content)
+        return redirect('send_message')
+    return render(request, 'send_message.html')
+
+@login_required()
+@permission_required('librarian')
+def view_messages(request):
+    messages = Message.objects.all().order_by('-timestamp')
+    if request.method == 'POST':
+        query = request.POST.get('query')
+        results = Message.objects.filter(Q(content__icontains=query) | Q(subject__icontains=query))
+        return render(request, 'messages.html', {'messages': results})
+    return render(request, 'messages.html', {'messages': messages})
+
+@login_required()
+@permission_required('librarian')
+def message(request, message_id):
+    message = get_object_or_404(Message, id=message_id)
+    message.read = True
+    message.save()
+    if request.method == 'POST':
+        reply = request.POST.get('content')
+        sender_email = request.user.email
+        receiver_email = message.sender.email
+        send_mail(
+            'Reply to your message',
+            reply,
+            sender_email,
+            [receiver_email],
+            fail_silently=False,
+        )
+        return redirect('view_messages')
+    return render(request, 'message.html', {'message': message})
+
+
+@login_required()
+@permission_required('librarian')
+def delete_message(request, message_id):
+    message = get_object_or_404(Message, id=message_id)
+    message.delete()
+    return redirect('view_messages')
 
 #todo- add clubs
 
+@login_required()
+@permission_required('student')
+def clubs(request):
+    return render(request, 'clubs.html', {})
 
 #todo - add blogs in techclub
+def techclub(request, user_id):
+    _user = get_object_or_404(Users, pk=user_id)
 #todo - add events in techclub
 #todo - add projects in techclub
-#todo - add pagination
+
 

@@ -1,18 +1,23 @@
-document.getElementById('lib_issue_id').addEventListener('input', function() {
-    var id = this.value;
-            console.log("fetching", id)
+document.addEventListener('DOMContentLoaded', function() {
+document.getElementById('lib_issue_id').addEventListener('keydown', function() {
+    if (event.key === "Enter") {
+        event.preventDefault();
 
-    fetch('/get_user_details/' + id)
-        .then(response => response.json())
-        .then(data => {
-            // Update the fields with the returned data
-            console.log(data)
-            document.getElementById('name-field').innerHTML = data.name;
-            document.getElementById('email-field').innerHTML = data.email;
-            document.getElementById('phone-field').innerHTML = data.phone;
-            document.getElementById('book-field').innerHTML = data.issued_book;
-            document.getElementById('fine-field').innerHTML = data.fine;
+        var id = this.value;
+        console.log("fetching", id)
 
-            // Add similar lines for other fields
-        });
+        fetch('/get_user_details/' + id)
+            .then(response => response.json())
+            .then(data => {
+                // Update the fields with the returned data
+                console.log(data)
+                document.getElementById('name-field').innerHTML = 'User: ' + data.name;
+                document.getElementById('id-field').innerHTML = 'ID: ' + data.id_number;
+                document.getElementById('book-field').innerHTML = 'Books: '+data.issued_book;
+                document.getElementById('fine-field').innerHTML = 'Fine: ' + data.fine;
+
+                // Add similar lines for other fields
+            });
+    }
+});
 });

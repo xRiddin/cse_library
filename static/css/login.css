@@ -30,6 +30,9 @@ section{
     align-items: center;
 
 }
+.button_login{
+    margin-left: 30px;
+}
 h2{
     font-size: 2em;
     color: #fff;
@@ -39,7 +42,8 @@ h2{
     margin-left: 30px;
     margin-right: 30px;
     position: relative;
-    margin: 50px 0;
+    margin: 50px;
+    margin-top: 50px;
     border-bottom: 2px solid #fff;
 }
 .login_box label{

@@ -30,6 +30,7 @@ table tr {
     }
 
     .issued-book {
+        align-content: center;
         margin-top: 20px;
         font-weight: bold;
     }

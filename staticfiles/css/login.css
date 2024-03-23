@@ -16,6 +16,10 @@ section{
     background-size: cover;
 }
 
+.button_login{
+    margin: 30px;
+    margin-top: 50px;
+}
 .login{
     position:calc(50% - 200px);
     place-content: center;
@@ -39,7 +43,8 @@ h2{
     margin-left: 30px;
     margin-right: 30px;
     position: relative;
-    margin: 50px 0;
+    margin: 50px;
+    margin-top: 50px;
     border-bottom: 2px solid #fff;
 }
 .login_box label{

@@ -14,7 +14,7 @@
                 <form action="{% url 'login_user' %}" method="post">
                     {% csrf_token %}
 
-                    <h2>Login</h2>
+                    <h2 style="color:#FFFFFF">Login</h2>
                     <div class="login_box">
                         <ion-icon name="mail-outline"></ion-icon>
                         <input type="text" name="usn" required>
@@ -25,12 +25,7 @@
                         <input type="password" name="password"required>
                         <label for="">Password</label>
                     </div>
-                    
-                    <div class="forget">
-                        <lable><a href="{% url 'password_reset' %}">Forget Password</a></label>
-
-                    </div>
-                    <button>Log in</button>
+                    <button class="button_login">Log in</button>
                     <div class="register">
                         <p>Don't have a account <a href="{% url 'contact' %}">Contact Us</a></p>
                     </div>

@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Messages</h1>
+<form method="post">
+    {% csrf_token %}
+    <input style="width: 1200px; margin-bottom: 50px; margin-top: 50px;" type="text" name="query" placeholder="Search using related words">
+    <input style="color: green; align-content: center;" type="submit" value="Search">
+</form>
+    <div class="messages">
+        {% for message in messages %}
+        {% if message.read == False %}
+            <a href="{% url 'message' message.id %}"><div class="message_false">
+                <h4>Subject: {{message.subject}}</h4>
+                <p>posted at: {{ message.timestamp}}</p>
+            </div></a>
+        {% else %}
+            <a href="{% url 'message' message.id %}"><div class="message_true">
+                <h4>Subject: {{message.subject}}</h4>
+                <p>posted at: {{ message.timestamp}}</p>
+            </div></a>
+        {% endif %}
+        {% endfor %}
+    </div>
+{% endblock %}

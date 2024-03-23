@@ -39,6 +39,7 @@
 <table class="styled-table">
     <thead>
   <tr>
+      <th>Transaction ID</th>
     <th>User</th>
     <th>Transaction Type</th>
     <th>Transaction Date</th>
@@ -47,6 +48,7 @@
     <tbody>
 {% for log in transaction_logs %}
     <tr>
+        <td> {{ log.id }}</td>
     <td> {{ log.user.name }}</td>
     <td> {{ log.transaction_type }}</td>
     <td> {{ log.transaction_date }}</td>

@@ -17,37 +17,25 @@ def get_expiry_staff():
     return datetime.today() + timedelta(days=60)
 
 
-def fine(ret_date):
-    if not ret_date:
-        return 0
-    ret_date = ret_date.date()
-    today = datetime.today().date()
-    if ret_date < today:
-        days = (today - ret_date).days
-        fine = days * 10
-        return fine
-    return 0
-# todo: add history for transaction
-
 class Book(models.Model):
     class Program(models.TextChoices):
         UG = 'UG'
         PG = 'PG'
 
-    name = models.CharField(max_length=200)
+    name = models.CharField(max_length=2000)
     isbn = models.IntegerField(default=None)
-    publisher = models.CharField(max_length=400, default=None)
+    publisher = models.CharField(max_length=4000, default=None)
     access_code = models.IntegerField(default=None, primary_key=True)
     course = models.CharField(max_length=10, choices=Program.choices, default=Program.UG)
-    edition = models.IntegerField(default=None)
+    edition = models.IntegerField(default=None, blank=True, null=True)
     author = models.CharField(max_length=200, default=None)
     status = models.CharField(max_length=200, default="available")
-    # copies = models.IntegerField(default=0)
-    category = models.CharField(max_length=200, default=None, blank=True)
+    # volume = models.ForeignKey("Book_Copies", on_delete=models.CASCADE, related_name='book_copies', default=None, blank=True, null=True)
+    category = models.CharField(max_length=2000, default=None, blank=True)
     issue_date = models.DateField(default=None, null=True, blank=True)
     ret_date = models.DateField(default=None, null=True, blank=True)
     issue_to = models.ForeignKey("Users", on_delete=models.SET_NULL, null=True, blank=True, related_name='books', to_field='id_number')
-    reference = models.BooleanField(default=False)
+    reference = models.BooleanField(default=False, null=True, blank=True)
     purchase_date = models.DateField(default=None, blank=True, null=True)
     cost = models.IntegerField(default=None, blank=True, null=True)
     pub_year = models.IntegerField(default=None, blank=True, null=True)
@@ -185,6 +173,18 @@ class UserManager(BaseUserManager):
         if extra_fields.get('is_superuser') is not True:
             raise ValueError('Superuser must have is_superuser=True.')
         return self.create_user(username, email, password, **extra_fields)
+
+
+class Message(models.Model):
+    sender = models.ForeignKey("Users", related_name='sender', on_delete=models.CASCADE)
+    # owner = models.ForeignKey("Users", related_name='owner', on_delete=models.CASCADE)
+    content = models.TextField()
+    subject = models.TextField(default=None, blank=True, null=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    read = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.content
 
 
 class Users(AbstractUser):

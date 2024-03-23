@@ -36,7 +36,7 @@
 {% if user.user_type == 1 %}
 
   <a href="{% url 'librarian'%}">DASHBOARD</a>
-    <a href="{% url 'lib_notification' %}">Notifications</a>
+    <a href="{% url 'lib_notification' %}">Circulars</a>
     <div class="dropdown">
         <a href="{% url 'lib_book'%}">Books</a>
         <div class="dropdown-content">
@@ -67,10 +67,11 @@
   <a href="{% url 'lib_return' %}">Return</a>
   <a href="{% url 'repay_due' %}">Pay amount</a>
 <a href="{% url 'transaction_logs' %}">Transactions</a>
+    <a href="{% url 'view_messages' %}">Messages</a>
 
   {% elif user.user_type == 3 %}
    <a href="{% url 'home'%}">Home</a>
-    <a href="{% url 'notification' %}">Notifications</a>
+    <a href="{% url 'notification' %}">Circular</a>
    <a href="{% url 'books' %}">Books</a>
    <a href="{% url 'mag' %}">Magazines</a>
    <a href="{% url 'files' %}">Resources</a>

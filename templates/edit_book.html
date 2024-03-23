@@ -56,6 +56,7 @@
         color: red;
     }
 </style>
+<h1 class="heading_h1" style="font-size: 40px;">Edit Book</h1>
 <div class="card">
     <div class="card-body">
         <form method="POST" class="needs-validation card-form" novalidate>
@@ -81,22 +82,17 @@
                 {{ form.edition }}
             </div>
             <div class="form-group">
-                <label for="{{ form.reference.id_for_label }}">Reference:</label>
-                {{ form.reference }}
-            <div class="form-group">
-                <label for="{{ form.copies.id_for_label }}">Copies:</label>
-                {{ form.copies }}
-            </div>
-            <div class="form-group">
-                <label for="{{ form.issue_date.id_for_label }}">ISSUED DATE:</label>
+                <label for="{{ form.issue_date.id_for_label }}">Issue Date:</label>
                 {{ form.issue_date }}
             </div>
+
             <div class="form-group">
-                <label for="{{ form.ret_date.id_for_label }}">RETURN DATE:</label>
+                <label for="{{ form.ret_date.id_for_label }}">Available:</label>
                 {{ form.ret_date }}
             </div>
-        
+
             <button type="submit" class="btn btn-primary">UPDATE</button>
+                <button class="btn btn-primary"><a href="{% url 'delete_book' book_id%}">DELETE</a></button>
         </form>
     </div>
 </div>

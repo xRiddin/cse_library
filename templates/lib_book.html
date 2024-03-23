@@ -74,7 +74,7 @@
       <th class="book-table-header">Volumes</th>
       <th class="book-table-header">Reference</th>
       <th class="book-table-header">Author</th>
-      <th class="book-table-header"> Available</th>
+      <th class="book-table-header"> Available Copies</th>
       <th class="book-table-header">Issue Date</th>
       <th class="book-table-header">Available On</th>
     </tr>
@@ -95,9 +95,9 @@
             {% endif %}
           <td class="book-table-data">{{ book.author }}</td>
           {% if book.status == 'available' %}
-          <td class="book-table-data">✅</td>
+          <td class="book-table-data">{{ book.available }}✅</td>
             {% else %}
-                <td class="book-table-data">❌</td>
+                <td class="book-table-data"> {{ book.available }}❌</td>
                 {% endif %}
           {% if book.issue_date %}
             <td class="book-table-data">{{ book.issue_date }}</td>

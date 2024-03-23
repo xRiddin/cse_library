@@ -1,4 +1,7 @@
 .navbar{
         background-color: #9F4118C9;
     backdrop-filter: blur(100px);
+    -webkit-backdrop-filter: blur(100px);
+    padding: 0;
+    margin: 0 auto;
 }

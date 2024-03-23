@@ -71,7 +71,7 @@
     <h1> Books </h1>
    <form method="post">
     {% csrf_token %}
-    <input type="text" name="query" placeholder="Search Student">
+    <input type="text" name="query" placeholder="Search Book">
     <input type="submit" value="Search">
 </form>
   {% if list %}
@@ -81,7 +81,7 @@
       <th class="book-table-header">Name</th>
       <th class="book-table-header">ISBN</th>
       <th class="book-table-header">Edition</th>
-      <th class="book-table-header">Volumes</th>
+      <th class="book-table-header">Available Copies</th>
       <th class="book-table-header">Reference</th>
       <th class="book-table-header">Author</th>
       <th class="book-table-header">Available On</th>

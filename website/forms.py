@@ -24,18 +24,15 @@ class UserForm(forms.ModelForm):
 
 class BookForm(forms.ModelForm):
     name = forms.CharField(label='Name', max_length=100, widget=forms.TextInput(attrs={'placeholder': 'Enter book name'}))
-    isbn = forms.CharField(label='ISBN', max_length=13, widget=forms.TextInput(attrs={'placeholder': 'Enter ISBN'}))
-    
+    isbn = forms.CharField(label='ISBN', max_length=13, widget=forms.NumberInput(attrs={'placeholder': 'Enter ISBN'}))
     category = forms.CharField(label='category', max_length=200, widget=forms.TextInput(attrs={'placeholder': 'Enter category'}))
     author = forms.CharField(label='Author', max_length=100, widget=forms.TextInput(attrs={'placeholder': 'Enter author name'}))
-    copies = forms.IntegerField(label='Copies', widget=forms.NumberInput(attrs={'min': '1'}))
-    reference = forms.BooleanField(label='Reference', required=False)
     issue_date = forms.DateField(label='issue_date', widget=forms.DateInput(attrs={'type': 'date'}), required=False)
     ret_date = forms.DateField(label='ret_date', widget=forms.DateInput(attrs={'type': 'date'}), required=False)
     edition = forms.IntegerField(label='Edition', widget=forms.NumberInput(attrs={'min': '1'}) )
     class Meta:
         model = Book
-        fields = ['name','isbn', 'edition', 'category', 'author', 'reference', 'copies', 'issue_date', 'ret_date', ]
+        fields = ['name','isbn', 'edition', 'category', 'author', 'issue_date', 'ret_date', ]
 
 
 class MagForm(forms.ModelForm):
