@@ -6,7 +6,9 @@ We are using Django as the full stack framework for developing library managemen
      ```
      pip install django
      ```
-  
+    or 
+    pip install -r "requirements.txt"
+    
   2. Run migrations
      ```
      python manage.py makemigration
