@@ -4,9 +4,9 @@ We are using Django as the full stack framework for developing library managemen
 ## Usage
   1. Install django in your system:
      ```
-     pip install django
+     pip install -r "requirements.txt"
      ```
-  
+    
   2. Run migrations
      ```
      python manage.py makemigration
