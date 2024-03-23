@@ -8,24 +8,22 @@ class Command(BaseCommand):
     help = 'Check overdue books and apply fines'
 
     def handle(self, *args, **kwargs):
-        # Get all books that have been issued
         issued_books = Book.objects.filter(status='issued')
 
         for book in issued_books:
-            # Check if the return date has passed
+
             if book.ret_date < timezone.now().date():
-                # Calculate the number of days overdue
+
                 days_overdue = (timezone.now().date() - book.ret_date).days
 
-                # Calculate the fine amount (2 per day)
+
                 fine_amount = 2
 
-                # Add the fine to the user's existing fine
+
                 user = book.issue_to
                 user.fine += fine_amount
                 user.save()
 
-                # Send an email to the user
                 send_mail(
                     'Library fine notice',
                     f'You have a fine of {user.fine} for overdue books.',
