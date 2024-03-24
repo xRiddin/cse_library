@@ -1,3 +1,6 @@
+import io
+from django.http import FileResponse
+from reportlab.pdfgen import canvas
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.db.models import F, ExpressionWrapper, fields
@@ -126,13 +129,25 @@ def student(request, id):
 @group_required('staff')
 def staff_about(request, id):
     u = get_object_or_404(Users, id_number=id)
+    issued_books = u.issued_book.all()
+    book_list = []
+    for book in issued_books:
+        book_list.append({
+            'id': book.access_code,
+            'name': book.name,
+            'isbn': book.isbn,
+            'edition': book.edition,
+            'author': book.author,
+            'issue_date': book.issue_date,
+            'available_on': book.ret_date,
+        })
     context = {
         'name': u.name,
         'phone': u.phone,
         'usn': u.id_number,
         'email': u.email,
         'fine': u.fine,
-        'issued': u.issued_book,
+        'issued': book_list,
     }
     messages.success(request, 'you have logged in...')
     return render(request, 'user.html', context)
@@ -868,6 +883,13 @@ def searchbook(request, query):
 
 
 @login_required()
+@group_required('librarian')
+def searchtransac(request, query):
+    results = TransactionLog.objects.filter(user__id_number__icontains=query)
+    return render(request, 'transaction_logs.html', {'results': results})
+
+
+@login_required()
 @group_required('student', 'staff')
 def search(request):
     form = SearchForm(request.POST)
@@ -1018,6 +1040,14 @@ def lib_files_delete(request, id):
 
 
 @login_required()
+@permission_required('librarian')
+def lib_notif_delete(request, id):
+    obj = Notification.objects.get(id=id)
+    obj.delete()
+    return redirect('lib_notification')
+
+
+@login_required()
 def notification(request):
     obj = Notification.objects.all()
     lis = []
@@ -1074,8 +1104,91 @@ def lib_notification(request):
 @login_required()
 @permission_required('librarian')
 def transaction_logs(request):
+    total = TransactionLog.objects.all().count()
     transaction_logs = TransactionLog.objects.all().order_by('-transaction_date')
-    return render(request, 'transaction_logs.html', {'transaction_logs': transaction_logs})
+    if request.method == 'POST':
+        query = request.POST.get('query')
+        results = TransactionLog.objects.filter(Q(user__id_number__icontains=query) | Q(transaction_type__icontains=query) | Q(transaction_date__icontains=query)).order_by('-transaction_date')
+        paginator = Paginator(results, 10)
+        page_number = request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+        return render(request, 'transaction_logs.html', {'transaction_logs': results, 'page_obj': page_obj, 'total': total})
+    else:
+        return render(request, 'transaction_logs.html', {'transaction_logs': transaction_logs, 'total': total})
+
+@login_required()
+def transaction_report(request, id):
+    buffer = io.BytesIO()
+
+    p = canvas.Canvas(buffer)
+
+    p.setFont("Helvetica-Bold", 24)
+    p.drawString(50, 750, "EAST WEST INSTIUTE OF TECHNOLOGY")
+
+    p.setFont("Helvetica-Bold", 18)
+    p.drawString(100, 700, "LIBRARY TRANSACTION REPORT")
+
+    p.setFont("Helvetica-Bold", 12)
+    p.drawString(50, 650, "Transaction Details")
+
+    transaction = TransactionLog.objects.get(id=id)
+    y = 600
+    if transaction.amount:
+        p.drawString(100, y, f"Transaction ID: {transaction.id}")
+        p.drawString( 100, y - 50, f"User: {transaction.user.name}, ID: {transaction.user.id_number}")
+        p.drawString(100, y - 100, f"Transaction Type: {transaction.transaction_type} Rs")
+        p.drawString(100, y - 150, f"Amount: {transaction.amount} Rs")
+        p.drawString(100, y - 200, f"Date: {transaction.transaction_date}")
+    else:
+        p.drawString(100, y, f"Transaction ID: {transaction.id}")
+        p.drawString(100, y - 50, f"User: {transaction.user.name}, ID: {transaction.user.id_number}")
+        p.drawString(100, y - 100, f"Transaction Type: {transaction.transaction_type}")
+        p.drawString(100, y - 150, f"Date: {transaction.transaction_date}")
+
+    p.setFont("Helvetica-Bold", 12)
+    p.drawString(250, 1000, "Footer: End of Report")
+
+    p.showPage()
+    p.save()
+
+    pdf = buffer.getvalue()
+    buffer.close()
+    return FileResponse(io.BytesIO(pdf), as_attachment=True, filename='transaction_report.pdf')
+
+
+@login_required()
+def transaction_reports(request):
+    buffer = io.BytesIO()
+
+    p = canvas.Canvas(buffer)
+    transactions = TransactionLog.objects.all().order_by('-transaction_date')
+    y = 600
+    for transaction in transactions:
+        p.setFont("Helvetica-Bold", 24)
+        p.drawString(50, 750, "EAST WEST INSTIUTE OF TECHNOLOGY")
+
+        p.setFont("Helvetica-Bold", 18)
+        p.drawString(100, 700, "LIBRARY TRANSACTION REPORT")
+
+        p.setFont("Helvetica-Bold", 12)
+        p.drawString(50, 650, "Transaction Details")
+        if transaction.amount:
+            p.drawString(100, y, f"Transaction ID: {transaction.id}")
+            p.drawString( 100, y - 50, f"User: {transaction.user.name}, ID: {transaction.user.id_number}")
+            p.drawString(100, y - 100, f"Transaction Type: {transaction.transaction_type} Rs")
+            p.drawString(100, y - 150, f"Amount: {transaction.amount} Rs")
+            p.drawString(100, y - 200, f"Date: {transaction.transaction_date}")
+        else:
+            p.drawString(100, y, f"Transaction ID: {transaction.id}")
+            p.drawString(100, y - 50, f"User: {transaction.user.name}, ID: {transaction.user.id_number}")
+            p.drawString(100, y - 100, f"Transaction Type: {transaction.transaction_type}")
+            p.drawString(100, y - 150, f"Date: {transaction.transaction_date}")
+        p.showPage()
+    p.save()
+
+    pdf = buffer.getvalue()
+    buffer.close()
+    return FileResponse(io.BytesIO(pdf), as_attachment=True, filename='transaction_report.pdf')
 
 
 def get_user_details(request, id):

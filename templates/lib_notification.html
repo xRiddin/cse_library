@@ -1,12 +1,68 @@
 {% include 'base.html' %}
 {% block content %}
+{% load static %}
 {% for message in messages %}
     <p>{{ message }}</p>
 {% endfor %}
 
-    <style>
+<h1> CIRCULARS</h1>
+<div class="content-container">
+        <div class="form-container">
+
+    <form method="post" enctype="multipart/form-data" class="form-container">
+        {% csrf_token %}
+        <label>Upload the file(if needed)</label>
+        <input type="file" name="document">
+        <label>Title</label>
+        <input type="text" name="title">
+        <label>Content</label>
+        <input type="text" name="content">
+        <button type="submit">Post</button>
+    </form>
+        </div>
+        <div class="table-container">
+
+    <h1>POSTS</h1>
+    <br>
+    <table border="0">
+        <tr>
+            <th>Title</th>
+            <th>Content</th>
+            {% if item.file %}
+            <th>File</th>
+            {% endif %}
+            <th>Uploaded By</th>
+
+        </tr>
+        {% for item in list %}
+        <tr>
+            <td>{{ item.title }}</td>
+            <td>{{ item.content }}</td>
+            {% if item.file %}
+            <td><a href="{{ item.file }}"> download</a></td>
+            {% endif %}
+            <td>{{ item.from}}</td>
+            <td class="del"><a href="{% url 'lib_notif_delete' item.id %}"><img src="{% static 'css/delete.gif' %}"></a></td>
+        </tr>
+        {% endfor %}
+    </table>
+        </div>
+</div>
+{% endblock %}
+{% include 'footer.html' %}
+<style>
+        .content-container {
+        display: flex;
+        justify-content: space-between;
+    }
+
+    /* Add styles for the form and table containers */
+    .form-container, .table-container {
+        width: 45%;  /* Adjust as needed */
+    }
+
         .form-container {
-        max-width: 400px;
+        max-width: 600px;
         margin: 0 auto;
         padding: 20px;
         background-color: #f2f2f2;
@@ -16,8 +72,8 @@
     /* Form input fields */
     .form-container input[type=text], .form-container input[type=file] {
         width: 100%;
-        padding: 12px 20px;
-        margin: 8px 0;
+        padding: 12px 1px;
+        margin: 8px 4PX;
         display: inline-block;
         border: 1px solid #ccc;
         box-sizing: border-box;
@@ -54,47 +110,15 @@
         th {
             background-color: #f2f2f2;
         }
+table tr td:nth-child(4),
+table tr th:nth-child(4) {
+    visibility: hidden;
+}
+
+/* Show the delete column when the row is hovered */
+table tr:hover td:nth-child(4),
+table tr:hover th:nth-child(4) {
+    visibility: visible;
+}
 
     </style>
-    <h1>Send circulars</h1>
-    <form method="post" enctype="multipart/form-data" class="form-container">
-        {% csrf_token %}
-        <label>Upload the file(if needed)</label>
-        <input type="file" name="document">
-        <label>Title</label>
-        <input type="text" name="title">
-        <label>Content</label>
-        <input type="text" name="content">
-        <button type="submit">Post</button>
-    </form>
-    <br>
-
-    <hr>
-    <hr>
-    <br>
-    <h1>Your Files</h1>
-    <br>
-    <table>
-        <tr>
-            <th>Title</th>
-            <th>Content</th>
-            {% if item.file %}
-            <th>File</th>
-            {% endif %}
-            <th>Uploaded By</th>
-            <th>delete</th>
-        </tr>
-        {% for item in list %}
-        <tr>
-            <td>{{ item.title }}</td>
-            <td>{{ item.content }}</td>
-            {% if item.file %}
-            <td><a href="{{ item.file }}"> download</a></td>
-            {% endif %}
-            <td>{{ item.from}}</td>
-            <td><a href="{% url 'lib_files_delete' item.id %}">delete</a></td>
-        </tr>
-        {% endfor %}
-    </table>
-{% endblock %}
-{% include 'footer.html' %}

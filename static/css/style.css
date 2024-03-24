@@ -38,10 +38,7 @@ nav{
     background: rgb(2,0,36);
     background: linear-gradient(90deg, rgba(2,0,36,1) 0%, rgba(9,26,121,1) 0%, rgba(7,65,150,1) 36%, rgba(4,133,200,1) 58%, rgba(2,193,229,1) 79%, rgba(0,254,255,1) 100%);
 }
-* {
-  box-sizing: border-box;
 
-}
 .navbar {
   width: 100%;
   display: flex;

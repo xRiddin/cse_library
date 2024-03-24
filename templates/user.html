@@ -31,7 +31,7 @@
 
         {% if issued %}
             <div class="issued-book">
-                <table>
+                <table border="1">
                 {% for book in issued.all %}
         <tr><td>Issued Book:</td><td>{{ book.name }}</td></tr>
                 <tr><td>ISBN: </td><td>{{ book.isbn }}</td></tr>

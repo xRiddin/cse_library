@@ -16,10 +16,6 @@ section{
     background-size: cover;
 }
 
-.button_login{
-    margin: 30px;
-    margin-top: 50px;
-}
 .login{
     position:calc(50% - 200px);
     place-content: center;
@@ -33,6 +29,9 @@ section{
     justify-content: center;
     align-items: center;
 
+}
+.button_login{
+    margin-left: 30px;
 }
 h2{
     font-size: 2em;
