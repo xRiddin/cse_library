@@ -371,7 +371,7 @@ def lib_auto(request):
     students = Users.objects.filter(user_type=3)
     for student in students:
         if student.fine > 0:
-            subject = 'Fine repayment'
+            subject = 'Fine payment'
             body = f"Please pay your fine of Rs. {student.fine} as soon as possible."
             send_mail(
                 subject,
@@ -379,10 +379,10 @@ def lib_auto(request):
                 settings.EMAIL_HOST_USER,
                 [student.email],
             )
-    staff = Users.objects.filter(user_type=2)
-    for staff in staff:
+    staffs = Users.objects.filter(user_type=2)
+    for staff in staffs:
         if staff.fine > 0:
-            subject = 'Fine repayment'
+            subject = 'Fine payment'
             body = f"Please pay your fine of Rs. {staff.fine} as soon as possible."
             send_mail(
                 subject,
@@ -390,7 +390,7 @@ def lib_auto(request):
                 settings.EMAIL_HOST_USER,
                 [staff.email],
             )
-    return HttpResponse('Email sent successfully')
+    return render(request, 'lib_auto.html', {})
 
 
 @login_required()

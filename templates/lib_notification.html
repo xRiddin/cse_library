@@ -12,9 +12,9 @@
     <form method="post" enctype="multipart/form-data" class="form-container">
         {% csrf_token %}
         <label>Title</label>
-        <input type="text" name="title">
+        <input type="text" name="title" required>
         <label>Content</label>
-        <input type="text" name="content">
+        <input type="text" name="content" required>
         <button type="submit">Post</button>
     </form>
         </div>

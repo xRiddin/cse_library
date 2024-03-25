@@ -81,11 +81,11 @@ table tr:hover th:nth-child(5) {
     <form method="post" enctype="multipart/form-data" class="form-container">
         {% csrf_token %}
         <label>Upload the file</label>
-        <input type="file" name="document">
+        <input type="file" name="document" required>
         <label>Title</label>
-        <input type="text" name="title">
+        <input type="text" name="title" required>
         <label>Description</label>
-        <input type="text" name="desp">
+        <input type="text" name="desp" required>
         <button type="submit">Upload</button>
     </form>
    <div class="table-container">
