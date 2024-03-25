@@ -55,6 +55,11 @@
 
 <div class="card-deck">
     <div class="card">
+        <h5 class="card-title">Circulars</h5>
+        <p class="card-text">Post and view circulars</p>
+        <a href="{% url 'lib_notification' %}" class="card-link">Go to Circulars</a>
+    </div>
+    <div class="card">
         <h5 class="card-title">Books</h5>
         <p class="card-text">View and Add books</p>
         <a href="{% url 'lib_book' %}" class="card-link">Go to Books</a>
@@ -65,14 +70,14 @@
         <a href="{% url 'lib_mag' %}" class="card-link">Go to Magazines</a>
     </div>
     <div class="card">
-        <h5 class="card-title">Staff</h5>
-        <p class="card-text">View and Add staff members</p>
-        <a href="{% url 'lib_student' %}" class="card-link">Go to Staff</a>
+        <h5 class="card-title">Users</h5>
+        <p class="card-text">View and Add members</p>
+        <a href="{% url 'lib_student' %}" class="card-link">Go to Users</a>
     </div>
-    <div class="card">
-        <h5 class="card-title">Students</h5>
-        <p class="card-text">View and Add students</p>
-        <a href="{% url 'lib_student' %}" class="card-link">Go to Students</a>
+<div class="card">
+        <h5 class="card-title">Resources</h5>
+        <p class="card-text">Post and Add resources</p>
+        <a href="{% url 'lib_files' %}" class="card-link">Go to Resources</a>
     </div>
     <div class="card">
         <h5 class="card-title">Issue</h5>
@@ -88,6 +93,21 @@
         <h5 class="card-title">Automate</h5>
         <p class="card-text">Automate library tasks</p>
         <a href="{% url 'lib_auto' %}" class="card-link">Go to Automate</a>
+    </div>
+    <div class="card">
+        <h5 class="card-title">Payments</h5>
+        <p class="card-text">Pay due fines</p>
+        <a href="{% url 'repay_due' %}" class="card-link">Go to Payments</a>
+    </div>
+    <div class="card">
+        <h5 class="card-title">Transactions</h5>
+        <p class="card-text">View Transactions</p>
+        <a href="{% url 'transaction_logs' %}" class="card-link">Go to Transactions</a>
+    </div>
+    <div class="card">
+        <h5 class="card-title">Messages</h5>
+        <p class="card-text">View and Reply to Messages</p>
+        <a href="{% url 'view_messages' %}" class="card-link">Go to Messages</a>
     </div>
 </div>
 {% endblock %}

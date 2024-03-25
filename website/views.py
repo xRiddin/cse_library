@@ -317,7 +317,6 @@ def lib_student(request):
                     'fine': i.fine,
                     'issued_book': book,
                     'ret_date': ret_dates,
-                    # 'issued_reference': i.issued_Reference,
                 })
             else:
                 lis.append({
@@ -349,7 +348,6 @@ def lib_student(request):
                     'fine': i.fine,
                     'issued_book': book,
                     'ret_date': ret_dates,
-                    # 'issued_reference': i.issued_Reference,
                 })
 
             else:
@@ -1055,7 +1053,6 @@ def notification(request):
         lis.append({
             'title': i.title,
             'content': i.content,
-            'file': i.file_notification.file if i.file_notification else None,
             'date': i.date_uploaded,
         })
     print(lis)
@@ -1070,20 +1067,9 @@ def lib_notification(request):
     if request.method == 'POST':
         title = request.POST.get('title')
         content = request.POST.get('content')
-        file = request.FILES['document'] if request.FILES else None
         if title and content:
             new_notification = Notification(title=title, content=content)
-            if file is not None:
-                fs = FileSystemStorage()
-                name = fs.save(file.name, file)
-                url = fs.url(name)
-                new_notification.file_notification.file = url
-                new_notification.file_notification.title = title
-                new_notification.file_notification.description = content
-                new_notification.file_notification.user = request.user.username
-
             new_notification.save()
-
             messages.success(request, 'Notification added successfully')
             return redirect('lib_notification')
         else:
@@ -1095,7 +1081,6 @@ def lib_notification(request):
             'title': i.title,
             'from': request.user.username,
             'content': i.content,
-            'file': i.file_notification.file if i.file_notification else None,
             'date': i.date_uploaded,
         })
     print(lis)

@@ -11,8 +11,6 @@
 
     <form method="post" enctype="multipart/form-data" class="form-container">
         {% csrf_token %}
-        <label>Upload the file(if needed)</label>
-        <input type="file" name="document">
         <label>Title</label>
         <input type="text" name="title">
         <label>Content</label>
@@ -28,9 +26,6 @@
         <tr>
             <th>Title</th>
             <th>Content</th>
-            {% if item.file %}
-            <th>File</th>
-            {% endif %}
             <th>Uploaded By</th>
 
         </tr>
@@ -38,9 +33,6 @@
         <tr>
             <td>{{ item.title }}</td>
             <td>{{ item.content }}</td>
-            {% if item.file %}
-            <td><a href="{{ item.file }}"> download</a></td>
-            {% endif %}
             <td>{{ item.from}}</td>
             <td class="del"><a href="{% url 'lib_notif_delete' item.id %}"><img src="{% static 'css/delete.gif' %}"></a></td>
         </tr>

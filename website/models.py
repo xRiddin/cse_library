@@ -134,15 +134,9 @@ class Holidays(models.Model):
 class Notification(models.Model):
     title = models.CharField(max_length=500)
     content = models.TextField()
+    user = models.ForeignKey('Users', on_delete=models.CASCADE, related_name='notifications', blank=True, null=True)
     date_uploaded = models.DateTimeField(auto_now_add=True)
-    file_notification = models.ForeignKey(File, on_delete=models.CASCADE, blank=True, null=True)
     history = HistoricalRecords()
-    def save(self, *args, **kwargs):
-        if self.file_notification:
-            if self.file_notification.user.user_type != 2 or self.file_notification.user.user_type != 1:
-                raise ValueError("Only staff and librarian can upload notifications")
-            self.file_notification.user.save()
-        super().save(*args, **kwargs)
 
 
 class UserManager(BaseUserManager):
